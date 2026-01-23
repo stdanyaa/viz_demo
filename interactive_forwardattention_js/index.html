@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forward Attention Visualization</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Forward Attention Visualization</h1>
+            <p>Click a BEV cell (query) to see which camera patches it attends to</p>
+        </header>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading scene data...</p>
+        </div>
+        
+        <div id="main-content" class="hidden">
+            <section class="top-controls">
+                <div class="control-group">
+                    <label>
+                        Heads:
+                        <select id="heads-select"></select>
+                    </label>
+                    <label>
+                        Overlay alpha:
+                        <input id="alpha-slider" type="range" min="0" max="1" step="0.05" value="0.6">
+                        <span id="alpha-value">0.60</span>
+                    </label>
+                    <label>
+                        Color scheme:
+                        <select id="colorscheme-select">
+                            <option value="red">Red (transparent low)</option>
+                            <option value="hsv">HSV (blue→red)</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="status-line">
+                    <span id="selection-status">No BEV cell selected</span>
+                </div>
+            </section>
+
+            <div class="main-layout">
+                <!-- Top: Camera strip -->
+                <section id="camera-strip-view" class="camera-strip-view">
+                    <h2>Camera strip</h2>
+                    <div id="camera-strip" class="camera-strip"></div>
+                </section>
+
+                <!-- Bottom: BEV View -->
+                <section id="bev-view" class="bev-view">
+                    <h2>BEV (click a cell)</h2>
+                    <div class="bev-container">
+                        <canvas id="bev-canvas"></canvas>
+                    </div>
+                </section>
+            </div>
+        </div>
+        
+        <div id="error" class="error hidden">
+            <p id="error-message"></p>
+        </div>
+    </div>
+    
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>

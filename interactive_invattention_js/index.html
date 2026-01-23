@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inverse Attention Visualization</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Inverse Attention Visualization</h1>
+            <p>Select regions on camera images to see which BEV queries attend to them</p>
+        </header>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading scene data...</p>
+        </div>
+        
+        <div id="main-content" class="hidden">
+            <!-- Camera Gallery -->
+            <section id="camera-gallery" class="camera-gallery"></section>
+            
+            <!-- Main Layout -->
+            <div class="main-layout">
+                <!-- Left: Camera View -->
+                <section id="camera-view" class="camera-view">
+                    <h2 id="camera-title">Camera: <span id="camera-name">-</span></h2>
+                    <div class="camera-container">
+                        <canvas id="camera-canvas"></canvas>
+                    </div>
+                    <div class="camera-controls">
+                        <div class="region-input">
+                            <h3>Add Region (Manual Input)</h3>
+                            <div class="input-group">
+                                <label>X1: <input type="number" id="x1-input" min="0"></label>
+                                <label>X2: <input type="number" id="x2-input" min="0"></label>
+                                <label>Y1: <input type="number" id="y1-input" min="0"></label>
+                                <label>Y2: <input type="number" id="y2-input" min="0"></label>
+                                <button id="add-region-btn" class="btn btn-primary">Add Region</button>
+                            </div>
+                        </div>
+                        <div class="region-list">
+                            <h3>Selected Regions</h3>
+                            <div id="regions-list"></div>
+                            <div class="button-group">
+                                <button id="clear-camera-btn" class="btn btn-secondary">Clear Current Camera</button>
+                                <button id="clear-all-btn" class="btn btn-secondary">Clear All Cameras</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Right: BEV View -->
+                <section id="bev-view" class="bev-view">
+                    <h2>BEV Attention Map</h2>
+                    <div class="bev-container">
+                        <canvas id="bev-canvas"></canvas>
+                    </div>
+                    <div class="bev-controls">
+                        <div class="control-group">
+                            <label>
+                                Aggregation:
+                                <select id="aggregation-select">
+                                    <option value="sum">Sum</option>
+                                    <option value="max">Max</option>
+                                    <option value="mean">Mean</option>
+                                </select>
+                            </label>
+                            <label>
+                                Heads:
+                                <select id="heads-select">
+                                    <option value="mean">Mean over heads</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        
+        <div id="error" class="error hidden">
+            <p id="error-message"></p>
+        </div>
+    </div>
+    
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>

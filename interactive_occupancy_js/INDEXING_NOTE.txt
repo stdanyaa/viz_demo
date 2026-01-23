@@ -1,0 +1,20 @@
+================================================================================
+CORRECT INDEXING FOR OCCUPANCY DATA
+================================================================================
+
+The occupancy data uses a specific indexing scheme that must be preserved:
+
+Shape: [nx, ny, nz] = [400, 400, 32]
+
+Index formula: z + y*nz + x*nz*ny
+
+This means:
+- z varies fastest (changes every element)
+- y varies second (changes every nz elements)  
+- x varies slowest (changes every nz*ny elements)
+
+This is DIFFERENT from standard C-order which would be: x + y*nx + z*nx*ny
+
+DO NOT CHANGE THIS INDEXING - it is correct for this data format.
+
+================================================================================
