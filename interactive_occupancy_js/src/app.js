@@ -151,7 +151,7 @@ class App {
                 <h2>3D mode</h2>
                 <div class="hint">
                     3D rendering can be very heavy for dense volumes.
-                    If this freezes, use default 2D mode (remove <code>?mode=3d</code>).
+                    If this freezes, refresh and avoid 3D mode.
                     <div style="height: 8px"></div>
                     <div><strong>Keys</strong></div>
                     <div><code>WASD</code> move, <code>Q/E</code> rotate left/right.</div>

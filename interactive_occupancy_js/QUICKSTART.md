@@ -50,9 +50,9 @@ Or with a specific scene:
 http://localhost:8000?scene=data/scenes/occ_av2_(10,23)_400x400x32.json
 ```
 
-Default is 3D mode (heavier). Force fast 2D mode:
+Default is 3D mode (heavier).
 ```
-http://localhost:8000?mode=2d&scene=data/scenes/occ_av2_(10,23)_400x400x32.json
+http://localhost:8000?mode=3d&scene=data/scenes/occ_av2_(10,23)_400x400x32.json
 ```
 
 ## Step 4: Use the Controls
