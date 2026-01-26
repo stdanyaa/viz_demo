@@ -65,7 +65,6 @@ export class InfiniteStrip {
     this._onPointerUp = null;
     this._onWheel = null;
 
-    this._debugId = Math.random().toString(36).slice(2, 8);
     this._lastResizeClientWidth = null;
 
     this.render();
@@ -94,9 +93,6 @@ export class InfiniteStrip {
   }
 
   render() {
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'shared/InfiniteStrip.js:render',message:'InfiniteStrip render()',data:{debugId:this._debugId,items:this.items.length,cw:this.container?.clientWidth||0,scrollW:this.container?.scrollWidth||0,enableInfinite:!!this.options.enableInfinite,half:this._renderedHalf,segW:this.segmentWidth},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     // Start with minimal cycles (0 if finite, else 3 segments) then re-render if we need 5/7/...
     const half = this.options.enableInfinite ? 1 : 0;
     this._renderWithHalf(half);
@@ -119,10 +115,6 @@ export class InfiniteStrip {
 
   _renderWithHalf(half) {
     if (this.options.onRenderStart) this.options.onRenderStart({ half });
-
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'shared/InfiniteStrip.js:_renderWithHalf',message:'InfiniteStrip _renderWithHalf',data:{debugId:this._debugId,half,items:this.items.length,cw:this.container?.clientWidth||0},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     this._renderedHalf = half;
     this.segmentWidth = null;
@@ -248,9 +240,6 @@ export class InfiniteStrip {
       // Ignore height-only resizes (common with iframe autoheight) unless width changed.
       if (this._lastResizeClientWidth !== null && Math.abs(cw - this._lastResizeClientWidth) < 1) return;
       this._lastResizeClientWidth = cw;
-      // #region agent log
-      fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'shared/InfiniteStrip.js:window.resize',message:'window resize -> InfiniteStrip.render',data:{debugId:this._debugId,cw:this.container?.clientWidth||0,innerW:window?.innerWidth||0,innerH:window?.innerHeight||0},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       this.render();
     };
     window.addEventListener('resize', this._onResize);

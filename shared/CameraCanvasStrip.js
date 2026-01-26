@@ -63,10 +63,6 @@ export class CameraCanvasStrip {
   updateOverlaysForQuery(queryIdx, opts = {}) {
     const { meanHeads = true, headIdx = null, globalMax = null, colorScheme = 'red' } = opts;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'shared/CameraCanvasStrip.js:updateOverlaysForQuery',message:'updateOverlaysForQuery called',data:{queryIdx,meanHeads,headIdx,hasGlobalMax:globalMax!=null,colorScheme},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     for (const camName of this.cameraNames) {
       const item = this._main.get(camName);
       if (!item) continue;
@@ -179,10 +175,6 @@ export class CameraCanvasStrip {
       const main = this._main.get(camName);
       if (!main) continue;
       const clones = this._clones.get(camName) || [];
-
-      // #region agent log
-      fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'shared/CameraCanvasStrip.js:_syncClonesFromMain',message:'sync clones from main',data:{camName,clones:clones.length,mainW:main.canvas?.width||0,mainH:main.canvas?.height||0},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
 
       for (const c of clones) {
         c.width = main.canvas.width;

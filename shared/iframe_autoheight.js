@@ -20,9 +20,6 @@ function sendHeightSoon() {
     rafId = null;
     const h = measureHeight();
     if (!h || Math.abs(h - lastSent) < 2) return;
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'shared/iframe_autoheight.js:sendHeightSoon',message:'postMessage iframe height',data:{h,lastSent,scrollH:document?.documentElement?.scrollHeight||0,bodyScrollH:document?.body?.scrollHeight||0,innerH:window?.innerHeight||0},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     lastSent = h;
     window.parent?.postMessage(
       {

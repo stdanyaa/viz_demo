@@ -148,9 +148,6 @@ export class CameraThumbStrip {
       const iw = image?.naturalWidth || image?.width || 0;
       const ih = image?.naturalHeight || image?.height || 0;
       if (!image || !iw || !ih) {
-        // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4',location:'shared/CameraThumbStrip.js:_drawIntoCanvas',message:'thumb draw skipped (image not ready)',data:{camName,iw,ih,canvasW:canvas?.width||0,canvasH:canvas?.height||0},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         return;
       }
 
@@ -162,9 +159,6 @@ export class CameraThumbStrip {
       const y = (canvas.height - height) / 2;
 
       ctx.drawImage(image, x, y, width, height);
-      // #region agent log
-      fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4',location:'shared/CameraThumbStrip.js:_drawIntoCanvas',message:'thumb drawn',data:{camName,iw,ih,canvasW:canvas?.width||0,canvasH:canvas?.height||0,regions:regions?.length||0},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
 
       // Draw region indicators with matching colors
       if (regions && regions.length > 0) {
@@ -193,10 +187,6 @@ export class CameraThumbStrip {
     const main = this._main.get(camName);
     if (!main) return;
     const clones = this._clones.get(camName) || [];
-
-    // #region agent log
-    fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'shared/CameraThumbStrip.js:_syncClonesFromMain',message:'thumb strip sync clones',data:{camName,clones:clones.length,mainW:main.canvas?.width||0,mainH:main.canvas?.height||0},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     for (const c of clones) {
       c.width = main.canvas.width;
