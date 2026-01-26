@@ -5,7 +5,7 @@
  */
 
 import { loadCompareScene } from './sceneLoader.js';
-import { ImageCarousel } from './components/ImageCarousel.js';
+import { ImageStrip } from '../../shared/ImageStrip.js';
 import { SplitViewRenderer } from './renderers/SplitViewRenderer.js';
 
 class App {
@@ -20,10 +20,8 @@ class App {
     this.canvasLeft = document.getElementById('gl-canvas-left');
     this.canvasRight = document.getElementById('gl-canvas-right');
     this.thumbStripEl = document.getElementById('thumb-strip');
-    this.selectedImgEl = document.getElementById('selected-image');
-    this.selectedLabelEl = document.getElementById('selected-label');
 
-    this.carousel = null;
+    this.strip = null;
     this.renderer = null;
   }
 
@@ -44,13 +42,19 @@ class App {
       // Let the browser do layout before we measure/init WebGL.
       await new Promise((r) => requestAnimationFrame(r));
 
-      // Top carousel
-      this.carousel = new ImageCarousel(
-        this.thumbStripEl,
-        this.selectedImgEl,
-        this.selectedLabelEl
-      );
-      this.carousel.setImages(scene.images);
+      // Top strip (no selection, no-op clicks)
+      const stripItems = scene.images.map((img) => ({
+        key: img.url,
+        src: img.url,
+        label: img.name || img.url
+      }));
+      this.strip = new ImageStrip(this.thumbStripEl, stripItems, {
+        enableSelection: false,
+        alwaysPannable: true,
+        // Reduce duplicate DOM/images; still infinite, just fewer segments.
+        maxSegments: 5,
+        itemClass: 'thumb'
+      });
 
       // Let images/strip populate before WebGL init (prevents 0x0 canvas on some browsers).
       await new Promise((r) => requestAnimationFrame(r));

@@ -84,17 +84,30 @@ header p {
     border-radius: 4px;
 }
 
-/* Camera Gallery */
-.camera-gallery {
-    display: flex;
-    gap: 1rem;
-    padding: 1.5rem 2rem;
+/* Camera strip */
+.camera-strip-view {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
-    overflow-x: auto;
+    padding: 1.25rem 2rem;
 }
 
-.camera-thumbnail {
+.camera-strip-view h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.camera-strip {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.camera-thumb-item {
     position: relative;
     cursor: pointer;
     border: 2px solid var(--border);
@@ -105,13 +118,13 @@ header p {
     flex-shrink: 0;
 }
 
-.camera-thumbnail:hover {
+.camera-thumb-item:hover {
     border-color: var(--accent);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.camera-thumbnail.selected {
+.camera-thumb-item.selected {
     border-color: var(--accent);
     border-width: 3px;
     box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent);
@@ -130,7 +143,7 @@ header p {
     font-weight: 500;
 }
 
-.camera-thumbnail.selected .thumbnail-label {
+.camera-thumb-item.selected .thumbnail-label {
     color: var(--accent);
     font-weight: 600;
 }
@@ -415,7 +428,7 @@ header p {
         gap: 1rem;
     }
     
-    .camera-gallery {
+    .camera-strip-view {
         padding: 1rem;
     }
     

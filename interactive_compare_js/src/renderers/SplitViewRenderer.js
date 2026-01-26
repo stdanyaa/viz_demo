@@ -140,6 +140,9 @@ export class SplitViewRenderer {
     this.scenePc = new THREE.Scene();
 
     this.animationId = null;
+    this._resizeObserver = null;
+    this._resizeRaf = 0;
+    this._lastCssSizes = { lW: 0, lH: 0, rW: 0, rH: 0 };
 
     this.moveSpeed = 0.5;
     this.rotateSpeed = 0.02;
@@ -163,7 +166,8 @@ export class SplitViewRenderer {
     this.rendererLeft = new THREE.WebGLRenderer({
       canvas: this.canvasLeft,
       antialias: true,
-      alpha: true,
+      // Opaque canvases avoid accidental visual blending if layout ever overlaps.
+      alpha: false,
       powerPreference: 'high-performance',
     });
     this.rendererLeft.setPixelRatio(window.devicePixelRatio || 1);
@@ -172,7 +176,7 @@ export class SplitViewRenderer {
     this.rendererRight = new THREE.WebGLRenderer({
       canvas: this.canvasRight,
       antialias: true,
-      alpha: true,
+      alpha: false,
       powerPreference: 'high-performance',
     });
     this.rendererRight.setPixelRatio(window.devicePixelRatio || 1);
@@ -250,8 +254,27 @@ export class SplitViewRenderer {
     window.addEventListener('keyup', this.handleKeyUp);
 
     window.addEventListener('resize', () => this.onResize());
+    this._installResizeObserver();
     this.onResize();
     this.animate();
+  }
+
+  _installResizeObserver() {
+    // In iframes, element size changes often do NOT trigger window.resize inside the iframe.
+    // ResizeObserver makes WebGL sizing robust to embed/layout changes.
+    if (!('ResizeObserver' in window)) return;
+    const schedule = () => {
+      if (this._resizeRaf) return;
+      this._resizeRaf = requestAnimationFrame(() => {
+        this._resizeRaf = 0;
+        this.onResize();
+      });
+    };
+    this._resizeObserver = new ResizeObserver(() => schedule());
+    this._resizeObserver.observe(this.canvasLeft);
+    this._resizeObserver.observe(this.canvasRight);
+    if (this.canvasLeft.parentElement) this._resizeObserver.observe(this.canvasLeft.parentElement);
+    if (this.canvasRight.parentElement) this._resizeObserver.observe(this.canvasRight.parentElement);
   }
 
   onResize() {
@@ -262,10 +285,25 @@ export class SplitViewRenderer {
     this.cameraLeft.updateProjectionMatrix();
     this.cameraRight.aspect = right.wCss / right.hCss;
     this.cameraRight.updateProjectionMatrix();
+
+    this._lastCssSizes = { lW: left.wCss, lH: left.hCss, rW: right.wCss, rH: right.hCss };
   }
 
   animate() {
     this.animationId = requestAnimationFrame(() => this.animate());
+
+    // Fallback safety: if embed/layout changes slip past ResizeObserver, resize here.
+    // This is cheap because it only triggers when CSS sizes actually changed.
+    const lRect = this.canvasLeft.getBoundingClientRect();
+    const rRect = this.canvasRight.getBoundingClientRect();
+    const lW = Math.max(1, Math.floor(lRect.width));
+    const lH = Math.max(1, Math.floor(lRect.height));
+    const rW = Math.max(1, Math.floor(rRect.width));
+    const rH = Math.max(1, Math.floor(rRect.height));
+    const s = this._lastCssSizes;
+    if (lW !== s.lW || lH !== s.lH || rW !== s.rW || rH !== s.rH) {
+      this.onResize();
+    }
 
     const direction = new THREE.Vector3();
     const right = new THREE.Vector3();

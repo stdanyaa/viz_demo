@@ -19,8 +19,11 @@
         </div>
         
         <div id="main-content" class="hidden">
-            <!-- Camera Gallery -->
-            <section id="camera-gallery" class="camera-gallery"></section>
+            <!-- Camera strip -->
+            <section id="camera-strip-view" class="camera-strip-view">
+                <h2>Cameras</h2>
+                <div id="camera-strip" class="camera-strip" aria-label="Camera strip"></div>
+            </section>
             
             <!-- Main Layout -->
             <div class="main-layout">
@@ -31,16 +34,6 @@
                         <canvas id="camera-canvas"></canvas>
                     </div>
                     <div class="camera-controls">
-                        <div class="region-input">
-                            <h3>Add Region (Manual Input)</h3>
-                            <div class="input-group">
-                                <label>X1: <input type="number" id="x1-input" min="0"></label>
-                                <label>X2: <input type="number" id="x2-input" min="0"></label>
-                                <label>Y1: <input type="number" id="y1-input" min="0"></label>
-                                <label>Y2: <input type="number" id="y2-input" min="0"></label>
-                                <button id="add-region-btn" class="btn btn-primary">Add Region</button>
-                            </div>
-                        </div>
                         <div class="region-list">
                             <h3>Selected Regions</h3>
                             <div id="regions-list"></div>
@@ -85,6 +78,6 @@
         </div>
     </div>
     
-    <script type="module" src="src/app.js"></script>
+    <script type="module" src="src/app.js?v=2026-01-26-inv-infinite-v1"></script>
 </body>
 </html>

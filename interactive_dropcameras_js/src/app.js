@@ -6,6 +6,7 @@ import {
   drawWedgeOutlinesNoClear,
   hitTestWedges,
 } from "./frustums.js";
+import { InfiniteStrip } from "../../shared/InfiniteStrip.js";
 
 // Keep the demo self-contained under this app's folder (GH Pages-friendly).
 const SCENE_DIR = "data/drop_scenes/av2_(10,23)";
@@ -72,6 +73,8 @@ class DropCamerasApp {
     this.cams = [];
     /** @type {string} */
     this.selectedCam = "";
+    /** @type {InfiniteStrip|null} */
+    this.strip = null;
 
     this.lengthMeters = 15.0;
     this.bounds = DEFAULT_BEV_BOUNDS;
@@ -110,7 +113,7 @@ class DropCamerasApp {
     // Default selection: front center if present; else first.
     this.selectedCam = this.cams.includes("ring_front_center") ? "ring_front_center" : this.cams[0];
     this._applySelection();
-    this._buildCameraStrip();
+    this._initCameraStrip();
 
     // Ensure overlays are always aligned with the rendered image area.
     this._setupResizeHandling();
@@ -144,44 +147,59 @@ class DropCamerasApp {
   }
 
   _buildCameraStrip() {
-    this.cameraStripEl.innerHTML = "";
-
-    for (const cam of this.cams) {
-      const btn = document.createElement("button");
-      btn.className = "cameraButton" + (cam === this.selectedCam ? " cameraButton--selected" : "");
-      btn.type = "button";
-      btn.title = cam;
-
-      const img = document.createElement("img");
-      img.className = "cameraButton__img";
-      img.alt = `Camera ${prettyCamName(cam)}`;
-      img.loading = "lazy";
-      img.src = `${SCENE_DIR}/${cam}_cam.jpg`;
-
-      const label = document.createElement("div");
-      label.className = "cameraButton__label";
-      label.textContent = prettyCamName(cam);
-
-      btn.appendChild(img);
-      btn.appendChild(label);
-
-      btn.addEventListener("click", () => {
-        this.selectedCam = cam;
-        this._applySelection();
-        this._updateStripSelection();
-        this.renderOverlays();
-      });
-
-      this.cameraStripEl.appendChild(btn);
-    }
+    // Deprecated in favor of InfiniteStrip-based _initCameraStrip().
   }
 
-  _updateStripSelection() {
-    const buttons = Array.from(this.cameraStripEl.querySelectorAll("button.cameraButton"));
-    for (const b of buttons) {
-      const title = b.getAttribute("title") || "";
-      b.classList.toggle("cameraButton--selected", title === this.selectedCam);
-    }
+  _initCameraStrip() {
+    const items = this.cams.map((cam) => ({
+      key: cam,
+      src: `${SCENE_DIR}/${cam}_cam.jpg`,
+      label: prettyCamName(cam),
+    }));
+
+    // Clear and rebuild
+    this.cameraStripEl.innerHTML = "";
+    this.strip?.destroy?.();
+
+    this.strip = new InfiniteStrip(this.cameraStripEl, items, {
+      key: (it) => it.key,
+      itemClass: "cameraButton",
+      selectedClass: "cameraButton--selected",
+      // Requested: drop app should stay finite (no infinite wrap).
+      alwaysPannable: false,
+      wheelPan: false,
+      maxSegments: 1,
+      enableInfinite: false,
+      createItemContainer: (it) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.title = it.key;
+        return btn;
+      },
+      onItemClick: (it) => {
+        if (it.key === this.selectedCam) return;
+        this.selectedCam = it.key;
+        this._applySelection();
+        this.strip?.setSelected(this.selectedCam);
+        this.renderOverlays();
+      },
+      renderMainItem: (el, it) => {
+        const img = document.createElement("img");
+        img.className = "cameraButton__img";
+        img.alt = `Camera ${it.label}`;
+        img.loading = "lazy";
+        img.src = it.src;
+
+        const label = document.createElement("div");
+        label.className = "cameraButton__label";
+        label.textContent = it.label;
+
+        el.appendChild(img);
+        el.appendChild(label);
+      },
+    });
+
+    this.strip.setSelected(this.selectedCam);
   }
 
   _applySelection() {
@@ -202,7 +220,7 @@ class DropCamerasApp {
     if (cam === this.selectedCam) return;
     this.selectedCam = cam;
     this._applySelection();
-    this._updateStripSelection();
+    this.strip?.setSelected(this.selectedCam);
     this.renderOverlays();
   }
 

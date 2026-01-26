@@ -44,66 +44,41 @@
       width: 100vw;
       height: calc(100vh - 56px);
       display: grid;
-      grid-template-rows: 34vh 1fr;
+      /* Keep 3D canvases stable: top row has a floor. */
+      grid-template-rows: minmax(210px, 34vh) 1fr;
     }
     #main.hidden { display: none; }
 
-    /* Top pane: selected image + thumbnail strip (stable) */
+    /* Top pane: infinite camera strip */
     #top-pane {
       border-bottom: 1px solid rgba(255,255,255,0.08);
       background: rgba(0,0,0,0.35);
-      display: grid;
-      grid-template-rows: minmax(0, 1fr) 110px;
-      min-height: 220px;
+      display: block;
+      padding: 10px 12px;
+      /* Keep strip paints/layout self-contained (helps iframe stability). */
+      contain: layout paint;
+      position: relative;
+      z-index: 2;
     }
 
     #thumb-strip {
       display: flex;
       gap: 10px;
       overflow-x: auto;
-      padding: 10px 12px;
-      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 6px 0;
       background: rgba(0,0,0,0.25);
-    }
-    #selected-image-wrap {
-      position: relative;
-      display: flex;
+      height: 100%;
       align-items: center;
-      justify-content: center;
-      padding: 10px;
-    }
-    #selected-image {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-    }
-    #selected-label {
-      position: absolute;
-      left: 14px;
-      bottom: 14px;
-      padding: 6px 10px;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.65);
-      border: 1px solid rgba(255,255,255,0.10);
-      font-size: 0.85rem;
-      color: #eaeaea;
-      max-width: 70%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
     .thumb {
       flex: 0 0 auto;
-      width: 160px;
-      height: 96px;
+      width: 260px;
+      height: 160px;
       border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.03);
       overflow: hidden;
-      cursor: pointer;
+      cursor: grab;
       position: relative;
     }
     .thumb img {
@@ -112,7 +87,7 @@
       object-fit: cover;
       display: block;
     }
-    .thumb .cap {
+    .thumb .image-strip-label {
       position: absolute;
       left: 8px;
       bottom: 8px;
@@ -132,7 +107,12 @@
     }
 
     /* Bottom pane: two canvases (more robust than scissor split) */
-    #bottom-pane { position: relative; }
+    #bottom-pane {
+      position: relative;
+      overflow: hidden;
+      contain: layout paint;
+      z-index: 1;
+    }
     #bottom-split {
       position: absolute;
       inset: 0;
@@ -179,10 +159,6 @@
 
   <div id="main" class="hidden">
     <section id="top-pane">
-      <div id="selected-image-wrap">
-        <img id="selected-image" alt="Selected camera view" />
-        <div id="selected-label">—</div>
-      </div>
       <div id="thumb-strip" aria-label="Camera images"></div>
     </section>
 
@@ -208,7 +184,7 @@
   }
   </script>
 
-  <!-- Cache-bust while iterating -->
-  <script type="module" src="src/app.js?v=2026-01-23-compare-v2b-stabletop"></script>
+  <!-- Cache-bust (strip-only + infinite wrap) -->
+  <script type="module" src="src/app.js?v=2026-01-26-compare-strip-infinite-v3"></script>
 </body>
 </html>

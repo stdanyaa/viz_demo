@@ -4,7 +4,7 @@
  */
 
 import { loadSceneData } from './dataLoader.js';
-import { CameraGallery } from './components/CameraGallery.js';
+import { CameraThumbStrip } from '../../shared/CameraThumbStrip.js';
 import { CameraView } from './components/CameraView.js';
 import { BEVView } from './components/BEVView.js';
 import { Controls } from './components/Controls.js';
@@ -125,12 +125,11 @@ class App {
         });
         
         // Camera Gallery - use display order
-        const galleryContainer = document.getElementById('camera-gallery');
-        this.cameraGallery = new CameraGallery(
-            galleryContainer,
-            displayOrder,
-            (camName) => this.selectCamera(camName)
-        );
+        const stripContainer = document.getElementById('camera-strip');
+        this.cameraGallery = new CameraThumbStrip(stripContainer, displayOrder, (camName) => this.selectCamera(camName), {
+            alwaysPannable: true,
+            maxSegments: 7
+        });
         
         // Update thumbnails (use try-catch to isolate errors)
         try {
