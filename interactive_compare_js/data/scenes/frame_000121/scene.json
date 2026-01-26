@@ -1,0 +1,40 @@
+{
+  "frame": 121,
+  "images": [
+    {
+      "name": "front center",
+      "url": "images/ring_front_center.jpg"
+    },
+    {
+      "name": "front left",
+      "url": "images/ring_front_left.jpg"
+    },
+    {
+      "name": "front right",
+      "url": "images/ring_front_right.jpg"
+    },
+    {
+      "name": "rear left",
+      "url": "images/ring_rear_left.jpg"
+    },
+    {
+      "name": "rear right",
+      "url": "images/ring_rear_right.jpg"
+    },
+    {
+      "name": "side left",
+      "url": "images/ring_side_left.jpg"
+    },
+    {
+      "name": "side right",
+      "url": "images/ring_side_right.jpg"
+    }
+  ],
+  "occupancy": {
+    "url": "occ_frame000121.json"
+  },
+  "pointcloud": {
+    "url": "vigt_frame000121.json"
+  },
+  "image_display_order": ["ring_rear_left", "ring_side_left", "ring_front_left", "ring_front_center", "ring_front_right", "ring_side_right", "ring_rear_right"]
+}

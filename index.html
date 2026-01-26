@@ -1,231 +1,394 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Interactive Attention Visualizations</title>
-    <style>
-      :root {
-        color-scheme: dark;
-        --bg: #0b0e14;
-        --panel: rgba(10, 14, 20, 0.86);
-        --border: rgba(255, 255, 255, 0.12);
-        --text: rgba(255, 255, 255, 0.92);
-        --muted: rgba(255, 255, 255, 0.68);
-        --link: #7cc4ff;
-      }
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="ViGT: Visual Implicit Geometry Transformer">
+  <meta name="description" content="ViGT is an autonomous driving geometric model that estimates continuous 3D occupancy fields from surround-view camera rigs using a calibration-free architecture.">
+  <meta name="keywords" content="autonomous driving, 3D occupancy, BEV, computer vision, transformer, self-supervised learning">
+  <meta name="author" content="ViGT Authors">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="ViGT Project">
+  <meta property="og:title" content="ViGT: Visual Implicit Geometry Transformer">
+  <meta property="og:description" content="ViGT is an autonomous driving geometric model that estimates continuous 3D occupancy fields from surround-view camera rigs.">
+  <meta property="og:url" content="https://YOUR_DOMAIN.com/vigt">
+  <meta property="og:image" content="https://YOUR_DOMAIN.com/static/images/social_preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="ViGT: Visual Implicit Geometry Transformer">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ViGT: Visual Implicit Geometry Transformer">
+  <meta name="twitter:description" content="ViGT is an autonomous driving geometric model that estimates continuous 3D occupancy fields from surround-view camera rigs.">
+  <meta name="twitter:image" content="https://YOUR_DOMAIN.com/static/images/social_preview.png">
+  
+  <!-- Academic/Research Specific -->
+  <meta name="citation_title" content="ViGT: Visual Implicit Geometry Transformer">
+  <meta name="citation_publication_date" content="2026">
+  
+  <!-- Additional SEO -->
+  <meta name="theme-color" content="#2563eb">
+  
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
-      * {
-        box-sizing: border-box;
+  <title>ViGT: Visual Implicit Geometry Transformer</title>
+  
+  <!-- Critical CSS -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css?v=2026-01-26-demos-v2">
+  
+  <!-- Non-critical CSS -->
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Defer JavaScript -->
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+  
+  <!-- PDF.js Configuration -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        // Load and render PDF
+        async function loadPDF() {
+          const pdfPath = 'static/images/ARCH_SCHEME.pdf';
+          const container = document.getElementById('pdf-viewer');
+          
+          if (!container) return;
+          
+          try {
+            const loadingTask = pdfjsLib.getDocument(pdfPath);
+            const pdf = await loadingTask.promise;
+            
+            // Get first page
+            const page = await pdf.getPage(1);
+            const scale = 2.0;
+            const viewport = page.getViewport({ scale: scale });
+            
+            // Create canvas
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            canvas.style.maxWidth = '100%';
+            canvas.style.height = 'auto';
+            
+            // Render PDF page
+            const renderContext = {
+              canvasContext: context,
+              viewport: viewport
+            };
+            
+            await page.render(renderContext).promise;
+            container.appendChild(canvas);
+          } catch (error) {
+            console.error('Error loading PDF:', error);
+            container.innerHTML = '<p style="color: #666;">Error loading PDF. Please ensure the file exists in the content folder.</p>';
+          }
+        }
+        
+        loadPDF();
       }
+    });
+  </script>
+</head>
+<body>
 
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-        background: var(--bg);
-        color: var(--text);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      }
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
 
-      a {
-        color: var(--link);
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
+  <main id="main-content">
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">ViGT: Visual Implicit Geometry Transformer</h1>
+            <div class="is-size-5 publication-authors">
+              <!-- TODO: Replace with your paper authors -->
+              <span class="author-block">
+                <a href="#" target="_blank">Author Name</a><sup>1</sup>,</span>
+              <span class="author-block">
+                <a href="#" target="_blank">Author Name</a><sup>2</sup>,</span>
+              <span class="author-block">
+                <a href="#" target="_blank">Author Name</a><sup>1</sup>
+              </span>
+            </div>
 
-      header.topbar {
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        background: var(--panel);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--border);
-      }
+            <div class="is-size-5 publication-authors">
+              <!-- TODO: Replace with your institution -->
+              <span class="author-block">Institution Name<br>Conference name and year</span>
+            </div>
 
-      .topbar__inner {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 12px 16px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        flex-wrap: wrap;
-      }
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- Paper PDF -->
+                <span class="link-block">
+                  <a href="#" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
 
-      .brand {
-        font-weight: 650;
-        letter-spacing: 0.2px;
-      }
+              <!-- Code -->
+              <span class="link-block">
+                <a href="#" target="_blank"
+                class="external-link button is-normal is-rounded is-dark">
+                <span class="icon">
+                  <i class="fab fa-github"></i>
+                </span>
+                <span>Code</span>
+              </a>
+            </span>
 
-      nav {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
+            <!-- arXiv -->
+            <span class="link-block">
+              <a href="#" target="_blank"
+              class="external-link button is-normal is-rounded is-dark">
+              <span class="icon">
+                <i class="ai ai-arxiv"></i>
+              </span>
+              <span>arXiv</span>
+            </a>
+          </span>
 
-      nav a {
-        display: inline-flex;
-        align-items: center;
-        padding: 6px 10px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        font-size: 0.92rem;
-        color: var(--text);
-        background: rgba(255, 255, 255, 0.04);
-      }
+          <!-- HuggingFace -->
+          <span class="link-block">
+            <a href="#" target="_blank"
+            class="external-link button is-normal is-rounded is-dark">
+            <span class="icon">
+              🤗
+            </span>
+            <span>HuggingFace</span>
+          </a>
+        </span>
 
-      .hint {
-        color: var(--muted);
-        font-size: 0.92rem;
-        margin-left: auto;
-      }
-
-      main {
-        width: 100%;
-      }
-
-      section.appSection {
-        /* Give the iframe a full viewport height, plus extra room for the sticky topbar + section header. */
-        min-height: calc(100vh + 96px);
-        border-bottom: 1px solid var(--border);
-        scroll-margin-top: 72px; /* for sticky header */
-        display: grid;
-        grid-template-rows: auto 1fr;
-      }
-
-      .sectionHeader {
-        padding: 14px 16px 10px;
-        border-bottom: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.02);
-      }
-
-      .sectionHeader__inner {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-
-      .sectionTitle {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 650;
-      }
-
-      .sectionLinks {
-        display: inline-flex;
-        gap: 10px;
-        color: var(--muted);
-        font-size: 0.92rem;
-        align-items: baseline;
-        flex-wrap: wrap;
-      }
-
-      .sectionNote {
-        color: var(--muted);
-        font-size: 0.92rem;
-      }
-
-      .iframeWrap {
-        width: 100%;
-        height: 100%;
-      }
-
-      iframe.appFrame {
-        display: block;
-        width: 100%;
-        /* Ensure the embedded app has enough vertical space to be fully visible. */
-        height: 100vh;
-        border: 0;
-        background: #000;
-      }
-
-      /* Make iframe fill remaining space of the section */
-      section.appSection .iframeWrap,
-      section.appSection iframe.appFrame {
-        height: 100%;
-      }
-    </style>
-  </head>
-  <body>
-    <header class="topbar">
-      <div class="topbar__inner">
-        <nav aria-label="Jump to section">
-          <a href="#dropcameras">Drop cameras</a>
-          <a href="#invattention">Inverse attention</a>
-          <a href="#forwardattention">Forward attention</a>
-          <a href="#occupancy">Occupancy</a>
-        </nav>
+        <!-- Slides -->
+        <span class="link-block">
+          <a href="#" target="_blank"
+          class="external-link button is-normal is-rounded is-dark">
+          <span class="icon">
+            <i class="fas fa-presentation"></i>
+          </span>
+          <span>Slides</span>
+        </a>
+      </span>
+            </div>
+          </div>
+        </div>
       </div>
-    </header>
+    </div>
+  </section>
 
-    <main>
-      <section id="dropcameras" class="appSection">
-        <div class="sectionHeader">
-          <div class="sectionHeader__inner">
-            <h2 class="sectionTitle">Drop cameras</h2>
-            <div class="sectionLinks">
-              <a href="./interactive_dropcameras_js/index.html" target="_blank" rel="noopener">Open standalone</a>
-            </div>
+<!-- Paper abstract -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            We introduce the Visual Implicit Geometry Transformer (ViGT), an autonomous driving geometric model that estimates continuous 3D occupancy fields from surround-view camera rigs. ViGT represents a step towards foundational geometric models for autonomous driving, prioritizing scalability, architectural simplicity, and generalization across diverse sensor configurations. Our approach achieves this through a calibration-free architecture, enabling a single model to adapt to different sensor setups. 
+            Unlike general-purpose geometric foundational models that focus on pixel-aligned predictions, ViGT estimates a continuous 3D occupancy field in a bird's-eye-view (BEV) addressing domain-specific requirements.
+            ViGT naturally infers geometry from multiple camera views into a single metric coordinate frame, providing a common representation for multiple geometric tasks.
+            Unlike most existing occupancy models, we adopt a self-supervised training procedure that leverages synchronized image-LiDAR pairs, eliminating the need for costly manual annotations.
+            We validate the scalability and generalizability of our approach by training our model on a mixture of five large-scale autonomous driving datasets (NuScenes, Waymo, NuPlan, ONCE, and Argoverse) and achieving state-of-the-art performance on the pointmap estimation task, with the best average rank across all evaluated baselines. 
+            We further evaluate ViGT on the Occ3D-nuScenes benchmark, where ViGT achieves comparable performance with supervised methods.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End paper abstract -->
+
+<!-- Method Section -->
+<section class="section hero">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Method</h2>
+        <div class="content has-text-justified">
+          <p>
+            Our architecture consists of three main components: (1) an image encoder (ViT-L) that independently processes each image and extracts feature tokens from the last four layers, producing four sequences of tokens per image; (2) a calibration-free Implicit BEV Projection module that projects tokens from each encoder layer across all images to their corresponding BEV space, generating four layer-specific BEV representations, which are then aggregated and upsampled into a single unified BEV representation using DPT; and (3) a query-based Implicit Decoder that predicts occupancy probabilities for 3D points from the final BEV features. This design enables pure data-driven scene modeling without geometric inductive biases.
+          </p>
+        </div>
+        <div class="has-text-centered" style="margin-top: 2rem;">
+          <div id="pdf-viewer" style="display: inline-block;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End Method Section -->
+
+<!-- Interactive Demos -->
+<section class="section hero is-light" id="interactive-demos">
+  <!-- Use a wider container than the paper text column -->
+  <div class="container is-widescreen">
+    <h2 class="title is-3">Interactive demos</h2>
+    <div class="content has-text-justified">
+      <p>
+        These are fully interactive web demos embedded directly in this page. If a demo feels cramped, use the “Open fullscreen” link on each card.
+      </p>
+    </div>
+
+    <div class="demo-grid" role="list">
+      <article class="demo-card" role="listitem">
+        <div class="demo-card__header">
+          <div>
+            <h3 class="demo-card__title">Compare: occupancy vs point cloud</h3>
+            <p class="demo-card__subtitle">Side-by-side WebGL view with camera strip.</p>
+          </div>
+          <div class="demo-card__actions">
+            <a class="button is-small is-dark" target="_blank" rel="noopener"
+               href="/interactive_compare_js/index.html?scene=data/scenes/frame_000121/scene.json">Open fullscreen</a>
           </div>
         </div>
-        <div class="iframeWrap">
-          <iframe class="appFrame" src="./interactive_dropcameras_js/index.html" title="Drop cameras"></iframe>
-        </div>
-      </section>
-
-      <section id="invattention" class="appSection">
-        <div class="sectionHeader">
-          <div class="sectionHeader__inner">
-            <h2 class="sectionTitle">Inverse attention</h2>
-            <div class="sectionLinks">
-              <a href="./interactive_invattention_js/index.html" target="_blank" rel="noopener">Open standalone</a>
-            </div>
-          </div>
-        </div>
-        <div class="iframeWrap">
-          <iframe class="appFrame" src="./interactive_invattention_js/index.html" title="Inverse attention"></iframe>
-        </div>
-      </section>
-
-      <section id="forwardattention" class="appSection">
-        <div class="sectionHeader">
-          <div class="sectionHeader__inner">
-            <h2 class="sectionTitle">Forward attention</h2>
-            <div class="sectionLinks">
-              <a href="./interactive_forwardattention_js/index.html" target="_blank" rel="noopener">Open standalone</a>
-            </div>
-          </div>
-        </div>
-        <div class="iframeWrap">
-          <iframe class="appFrame" src="./interactive_forwardattention_js/index.html" title="Forward attention"></iframe>
-        </div>
-      </section>
-
-      <section id="occupancy" class="appSection">
-        <div class="sectionHeader">
-          <div class="sectionHeader__inner">
-            <h2 class="sectionTitle">Occupancy (default: 3D)</h2>
-            <div class="sectionLinks">
-              <a href="./interactive_occupancy_js/index.html?mode=3d" target="_blank" rel="noopener">Open 3D</a>
-            </div>
-          </div>
-        </div>
-        <div class="iframeWrap">
+        <div class="demo-embed">
           <iframe
-            class="appFrame"
-            src="./interactive_occupancy_js/index.html?mode=3d"
-            title="Occupancy (3D)"
-          ></iframe>
+            title="Compare: occupancy vs point cloud"
+            loading="lazy"
+            allow="fullscreen"
+            referrerpolicy="no-referrer"
+            src="/interactive_compare_js/index.html?scene=data/scenes/frame_000121/scene.json"></iframe>
         </div>
-      </section>
-    </main>
-  </body>
-</html>
+      </article>
 
+      <article class="demo-card" role="listitem">
+        <div class="demo-card__header">
+          <div>
+            <h3 class="demo-card__title">Drop cameras</h3>
+            <p class="demo-card__subtitle">Click thumbnails / frustums to swap a camera subset.</p>
+          </div>
+          <div class="demo-card__actions">
+            <a class="button is-small is-dark" target="_blank" rel="noopener"
+               href="/interactive_dropcameras_js/index.html">Open fullscreen</a>
+          </div>
+        </div>
+        <div class="demo-embed demo-embed--tall">
+          <iframe
+            title="Drop cameras"
+            loading="lazy"
+            allow="fullscreen"
+            referrerpolicy="no-referrer"
+            src="/interactive_dropcameras_js/index.html"></iframe>
+        </div>
+      </article>
+
+      <article class="demo-card" role="listitem">
+        <div class="demo-card__header">
+          <div>
+            <h3 class="demo-card__title">Forward attention</h3>
+            <p class="demo-card__subtitle">Click a BEV query to view attended camera patches.</p>
+          </div>
+          <div class="demo-card__actions">
+            <a class="button is-small is-dark" target="_blank" rel="noopener"
+               href="/interactive_forwardattention_js/index.html">Open fullscreen</a>
+          </div>
+        </div>
+        <div class="demo-embed">
+          <iframe
+            title="Forward attention visualization"
+            loading="lazy"
+            allow="fullscreen"
+            referrerpolicy="no-referrer"
+            src="/interactive_forwardattention_js/index.html"></iframe>
+        </div>
+      </article>
+
+      <article class="demo-card" role="listitem">
+        <div class="demo-card__header">
+          <div>
+            <h3 class="demo-card__title">Inverse attention</h3>
+            <p class="demo-card__subtitle">Select camera regions to see which BEV queries attend to them.</p>
+          </div>
+          <div class="demo-card__actions">
+            <a class="button is-small is-dark" target="_blank" rel="noopener"
+               href="/interactive_invattention_js/index.html">Open fullscreen</a>
+          </div>
+        </div>
+        <div class="demo-embed">
+          <iframe
+            title="Inverse attention visualization"
+            loading="lazy"
+            allow="fullscreen"
+            referrerpolicy="no-referrer"
+            src="/interactive_invattention_js/index.html"></iframe>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+<!-- End Interactive Demos -->
+
+<!--BibTex citation -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <div class="bibtex-header">
+        <h2 class="title">BibTeX</h2>
+        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+          <i class="fas fa-copy"></i>
+          <span class="copy-text">Copy</span>
+        </button>
+      </div>
+      <pre id="bibtex-code"><code>@inproceedings{vigt2026,
+  title={ViGT: Visual Implicit Geometry Transformer},
+  author={Your Name and Co-authors},
+  booktitle={Proceedings of the Conference},
+  year={2026}
+}</code></pre>
+    </div>
+</section>
+<!--End BibTex citation -->
+
+  <footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+            You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license"  href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  </body>
+  </html>

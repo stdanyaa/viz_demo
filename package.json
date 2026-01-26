@@ -1,0 +1,18 @@
+{
+  "name": "vigt-project-page",
+  "version": "1.0.0",
+  "description": "Project page for ViGT paper",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "project-page",
+    "3d-visualization",
+    "point-cloud",
+    "voxel"
+  ],
+  "author": "",
+  "license": "MIT"
+}
