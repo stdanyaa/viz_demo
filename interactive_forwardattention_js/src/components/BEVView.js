@@ -66,10 +66,10 @@ export class BEVView {
     
     resizeCanvas() {
         const container = this.canvas.parentElement;
-        // Keep BEV reasonably sized so it stays near the top and doesn't feel "far away"
-        // even when the container is tall.
-        const maxSize = Math.min(container.clientWidth - 40, 1024);
-        const size = Math.max(680, maxSize);
+        // Keep BEV reasonably sized for a right-column layout.
+        // (This demo is shown in an iframe often, so avoid huge minimums.)
+        const maxSize = Math.min(container.clientWidth - 40, 600);
+        const size = Math.max(360, maxSize);
         this.canvas.width = size;
         this.canvas.height = size;
         this.render();

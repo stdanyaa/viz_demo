@@ -38,6 +38,25 @@
                                 <button id="clear-all-btn" class="btn btn-secondary">Clear All Cameras</button>
                             </div>
                         </div>
+
+                        <div class="bev-controls">
+                            <div class="control-group">
+                                <label>
+                                    Aggregation:
+                                    <select id="aggregation-select">
+                                        <option value="sum">Sum</option>
+                                        <option value="max">Max</option>
+                                        <option value="mean">Mean</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Heads:
+                                    <select id="heads-select">
+                                        <option value="mean">Mean over heads</option>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </section>
                 
@@ -46,24 +65,6 @@
                     <h2>BEV Attention Map</h2>
                     <div class="bev-container">
                         <canvas id="bev-canvas"></canvas>
-                    </div>
-                    <div class="bev-controls">
-                        <div class="control-group">
-                            <label>
-                                Aggregation:
-                                <select id="aggregation-select">
-                                    <option value="sum">Sum</option>
-                                    <option value="max">Max</option>
-                                    <option value="mean">Mean</option>
-                                </select>
-                            </label>
-                            <label>
-                                Heads:
-                                <select id="heads-select">
-                                    <option value="mean">Mean over heads</option>
-                                </select>
-                            </label>
-                        </div>
                     </div>
                 </section>
             </div>

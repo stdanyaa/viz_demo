@@ -42,10 +42,8 @@ export class CameraView {
         // Mouse events for drag selection
         this.canvas.addEventListener('mousedown', (e) => {
             if (!this.currentImage) return;
-            
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+
+            const { x, y } = this._eventToCanvasXY(e);
             
             this.isDragging = true;
             this.dragStart = { x, y };
@@ -55,10 +53,8 @@ export class CameraView {
         
         this.canvas.addEventListener('mousemove', (e) => {
             if (!this.isDragging) return;
-            
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+
+            const { x, y } = this._eventToCanvasXY(e);
             
             this.dragEnd = { x, y };
             this.render();
@@ -66,10 +62,8 @@ export class CameraView {
         
         this.canvas.addEventListener('mouseup', (e) => {
             if (!this.isDragging) return;
-            
-            const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+
+            const { x, y } = this._eventToCanvasXY(e);
             this.dragEnd = { x, y };
             
             // Finalize selection
@@ -97,6 +91,21 @@ export class CameraView {
                 this.render();
             }
         });
+    }
+
+    _eventToCanvasXY(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const cssX = e.clientX - rect.left;
+        const cssY = e.clientY - rect.top;
+
+        // Canvas is frequently CSS-scaled (responsive), so convert CSS pixels to canvas pixels.
+        const scaleX = rect.width > 0 ? (this.canvas.width / rect.width) : 1;
+        const scaleY = rect.height > 0 ? (this.canvas.height / rect.height) : 1;
+
+        return {
+            x: cssX * scaleX,
+            y: cssY * scaleY
+        };
     }
     
     /**
@@ -141,11 +150,9 @@ export class CameraView {
      * Delete a region
      */
     deleteRegion(index) {
-        if (index >= 0 && index < this.regions.length) {
-            this.regions.splice(index, 1);
-            this.onRegionDelete(this.currentCamera, index);
-            this.render();
-        }
+        if (index < 0 || index >= this.regions.length) return;
+        // Let the app own the source of truth for regions; it will call `setRegions()`.
+        this.onRegionDelete(this.currentCamera, index);
     }
     
     /**

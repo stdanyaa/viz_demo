@@ -15,30 +15,6 @@
         </div>
         
         <div id="main-content" class="hidden">
-            <section class="top-controls">
-                <div class="control-group">
-                    <label>
-                        Heads:
-                        <select id="heads-select"></select>
-                    </label>
-                    <label>
-                        Overlay alpha:
-                        <input id="alpha-slider" type="range" min="0" max="1" step="0.05" value="0.6">
-                        <span id="alpha-value">0.60</span>
-                    </label>
-                    <label>
-                        Color scheme:
-                        <select id="colorscheme-select">
-                            <option value="red">Red (transparent low)</option>
-                            <option value="hsv">HSV (blue→red)</option>
-                        </select>
-                    </label>
-                </div>
-                <div class="status-line">
-                    <span id="selection-status">No BEV cell selected</span>
-                </div>
-            </section>
-
             <div class="main-layout">
                 <!-- Top: Camera strip -->
                 <section id="camera-strip-view" class="camera-strip-view">
@@ -46,13 +22,41 @@
                     <div id="camera-strip" class="camera-strip"></div>
                 </section>
 
-                <!-- Bottom: BEV View -->
-                <section id="bev-view" class="bev-view">
-                    <h2>BEV (click a cell)</h2>
-                    <div class="bev-container">
-                        <canvas id="bev-canvas"></canvas>
-                    </div>
-                </section>
+                <div class="below-strip-layout">
+                    <!-- Left: Controls -->
+                    <section class="top-controls">
+                        <h2>Controls</h2>
+                        <div class="control-group">
+                            <label>
+                                Heads:
+                                <select id="heads-select"></select>
+                            </label>
+                            <label>
+                                Overlay alpha:
+                                <input id="alpha-slider" type="range" min="0" max="1" step="0.05" value="0.6">
+                                <span id="alpha-value">0.60</span>
+                            </label>
+                            <label>
+                                Color scheme:
+                                <select id="colorscheme-select">
+                                    <option value="red">Red (transparent low)</option>
+                                    <option value="hsv">HSV (blue→red)</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="status-line">
+                            <span id="selection-status">No BEV cell selected</span>
+                        </div>
+                    </section>
+
+                    <!-- Right: BEV View -->
+                    <section id="bev-view" class="bev-view">
+                        <h2>BEV (click a cell)</h2>
+                        <div class="bev-container">
+                            <canvas id="bev-canvas"></canvas>
+                        </div>
+                    </section>
+                </div>
             </div>
         </div>
         

@@ -151,14 +151,14 @@ header p {
 /* Main Layout */
 .main-layout {
     display: grid;
-    grid-template-columns: 1fr 1.2fr; /* Give BEV more space */
+    grid-template-columns: 1fr 1.6fr; /* Give BEV more space */
     gap: 2rem;
     padding: 2rem;
-    max-width: 2000px;
+    max-width: 2800px;
     margin: 0 auto;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 900px) {
     .main-layout {
         grid-template-columns: 1fr;
     }
@@ -190,12 +190,15 @@ header p {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 400px;
+    min-height: 520px;
 }
 
 #camera-canvas {
-    max-width: 100%;
+    width: 100%;
     height: auto;
+    display: block;
+    flex: 0 0 auto;
+    align-self: center;
     border-radius: 4px;
     cursor: crosshair;
     background: #000;
@@ -351,8 +354,7 @@ header p {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 700px;
-    aspect-ratio: 1 / 1; /* Force square */
+    min-height: 420px;
 }
 
 #bev-canvas {
@@ -366,6 +368,7 @@ header p {
     display: flex;
     gap: 1.5rem;
     flex-wrap: wrap;
+    margin-top: 1rem;
 }
 
 .control-group {

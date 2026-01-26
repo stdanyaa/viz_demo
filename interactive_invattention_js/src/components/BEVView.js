@@ -30,9 +30,9 @@ export class BEVView {
      */
     resizeCanvas() {
         const container = this.canvas.parentElement;
-        // Make it larger and square - use most of the available space
-        const maxSize = Math.min(container.clientWidth - 40, container.clientHeight - 200, 900); // Max 900px, but responsive
-        const size = Math.max(600, maxSize); // Minimum 600px
+        // Keep BEV reasonably sized for a right-column layout (often embedded in iframes).
+        const maxSize = Math.min(container.clientWidth - 40, 600);
+        const size = Math.max(360, maxSize);
         this.canvas.width = size;
         this.canvas.height = size;
         this.render();

@@ -300,6 +300,11 @@ class App {
             regions.splice(index, 1);
             this.regionsByCamera.set(camName, regions);
             this.totalRegionCount = Math.max(0, this.totalRegionCount - 1);
+
+            // Update camera view to reflect the deletion
+            if (this.cameraView && this.selectedCamera === camName) {
+                this.cameraView.setRegions(regions);
+            }
             
             this.updateRegionList();
             this.updateBEVView();
@@ -336,7 +341,7 @@ class App {
             
             const info = document.createElement('span');
             info.className = 'region-info';
-            info.textContent = `Region ${index + 1}: x=[${region.xRange[0]}, ${region.xRange[1]}], y=[${region.yRange[0]}, ${region.yRange[1]}]`;
+            info.textContent = `Region ${index + 1}`;
             
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'btn btn-small';

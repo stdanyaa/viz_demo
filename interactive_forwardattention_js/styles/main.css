@@ -80,11 +80,17 @@ header p {
 
 .top-controls {
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border);
-    padding: 1rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+}
+
+.top-controls h2 {
+    margin-bottom: 0.25rem;
+    font-size: 1.2rem;
 }
 
 .control-group {
@@ -128,13 +134,24 @@ header p {
     flex-direction: column;
     gap: 1.25rem;
     padding: 1.5rem;
-    max-width: 2200px;
+    max-width: 2800px;
     margin: 0 auto;
 }
 
-@media (max-width: 1200px) {
+.below-strip-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 420px) 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
     .main-layout {
         padding: 1rem;
+    }
+
+    .below-strip-layout {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -159,7 +176,7 @@ header p {
     display: flex;
     justify-content: center;
     align-items: flex-start; /* keep BEV attached to top */
-    min-height: 820px;
+    min-height: 420px;
 }
 
 #bev-canvas {
