@@ -16,7 +16,8 @@
 
 html,
 body {
-  height: 100%;
+  height: auto;
+  min-height: 100%;
 }
 
 body {
@@ -30,9 +31,10 @@ body {
 }
 
 #app {
-  height: 100%;
+  /* Allow content-driven height (important for iframe auto-resize). */
+  min-height: 100vh;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: 1fr;
 }
 
 .header {
@@ -56,7 +58,9 @@ body {
 .layout {
   min-height: 0;
   display: grid;
-  grid-template-rows: auto 1fr;
+  /* Don't stretch the panels to fill leftover iframe height. */
+  grid-template-rows: auto auto;
+  align-content: start;
   gap: 10px;
   padding: 12px;
 }
@@ -136,7 +140,8 @@ body {
   border-radius: 12px;
   padding: 10px;
   display: grid;
-  grid-template-rows: auto 1fr;
+  /* Let the image stage define height instead of stretching. */
+  grid-template-rows: auto auto;
   gap: 8px;
 }
 
@@ -153,8 +158,10 @@ body {
 .imgStage {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: auto;
   min-height: 280px;
+  /* These occupancy renders are square; keeping a fixed ratio removes letterbox gaps. */
+  aspect-ratio: 1 / 1;
   border-radius: 10px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.35);

@@ -27,9 +27,14 @@ export class CameraRenderer {
      */
     renderImage(image, scaleX = 1, scaleY = 1) {
         if (!image) return;
-        
-        const width = image.width * scaleX;
-        const height = image.height * scaleY;
+
+        // Prefer natural dimensions (robust for `new Image()` not in DOM).
+        const iw = image.naturalWidth || image.width || 0;
+        const ih = image.naturalHeight || image.height || 0;
+        if (!iw || !ih) return;
+
+        const width = iw * scaleX;
+        const height = ih * scaleY;
         
         // Resize canvas to fit image
         this.canvas.width = width;

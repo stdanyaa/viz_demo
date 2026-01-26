@@ -1,5 +1,26 @@
 window.HELP_IMPROVE_VIDEOJS = false;
 
+// Auto-size embedded demo iframes to their content height.
+// Each iframe posts { type: "vigt:iframeHeight", height } from shared/iframe_autoheight.js
+(function setupIframeAutoHeight() {
+    window.addEventListener('message', function(ev) {
+        const data = ev?.data;
+        if (!data || data.type !== 'vigt:iframeHeight') return;
+        const h = Number(data.height);
+        if (!Number.isFinite(h) || h < 100) return;
+
+        const iframes = document.querySelectorAll('.demo-embed iframe');
+        for (const iframe of iframes) {
+            if (iframe.contentWindow === ev.source) {
+                iframe.style.height = `${h}px`;
+                const wrap = iframe.closest('.demo-embed');
+                if (wrap) wrap.style.height = `${h}px`;
+                break;
+            }
+        }
+    });
+})();
+
 // More Works Dropdown Functionality
 function toggleMoreWorks() {
     const dropdown = document.getElementById('moreWorksDropdown');

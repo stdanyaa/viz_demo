@@ -251,9 +251,11 @@ function pathForWedge(ctx, wdg) {
  * Dim everything, then punch out a hole for selected wedge.
  * Intended to run in a coordinate system where the canvas origin matches the image top-left.
  */
-export function drawDimMaskSelectedNoClear(ctx, wedges, selectedCam, dimAlpha = 0.6) {
-  const w = ctx.canvas.width;
-  const h = ctx.canvas.height;
+export function drawDimMaskSelectedNoClear(ctx, wedges, selectedCam, dimAlpha = 0.6, size = null) {
+  // Important: callers may translate the context so (0,0) is the displayed-image top-left.
+  // In that case, dimming should be limited to the displayed image rect (not the full canvas).
+  const w = (size && size.width) || ctx.canvas.width;
+  const h = (size && size.height) || ctx.canvas.height;
 
   // Dim layer
   ctx.save();

@@ -78,7 +78,7 @@ class DropCamerasApp {
 
     this.lengthMeters = 15.0;
     this.bounds = DEFAULT_BEV_BOUNDS;
-    this.dimAlpha = 0.62;
+    this.dimAlpha = 0.32;
 
     // If overlays appear mirrored, tweak these.
     this.orient = { ...DEFAULT_ORIENTATION };
@@ -278,7 +278,11 @@ class DropCamerasApp {
     ctxSel.clearRect(0, 0, ctxSel.canvas.width, ctxSel.canvas.height);
     ctxSel.save();
     ctxSel.translate(this._rectSelected.x, this._rectSelected.y);
-    drawDimMaskSelectedNoClear(ctxSel, this._wedgesSelected, this.selectedCam, this.dimAlpha);
+    // Limit dimming to the displayed image rect; otherwise letterbox space below gets extra dim.
+    drawDimMaskSelectedNoClear(ctxSel, this._wedgesSelected, this.selectedCam, this.dimAlpha, {
+      width: this._rectSelected.width,
+      height: this._rectSelected.height,
+    });
     drawWedgeOutlinesNoClear(ctxSel, this._wedgesSelected, this.selectedCam);
     ctxSel.restore();
   }

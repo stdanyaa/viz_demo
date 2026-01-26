@@ -230,9 +230,11 @@ export class CameraView {
      */
     getImageDimensions() {
         if (!this.currentImage) return { width: 0, height: 0 };
+        const w = this.currentImage.naturalWidth || this.currentImage.width || 0;
+        const h = this.currentImage.naturalHeight || this.currentImage.height || 0;
         return {
-            width: this.currentImage.width,
-            height: this.currentImage.height
+            width: w,
+            height: h
         };
     }
 }

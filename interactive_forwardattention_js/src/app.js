@@ -108,6 +108,12 @@ class App {
     }
     
     initializeComponents(sceneData) {
+        // Map camera name -> original index (robust to display-order differences)
+        const nameToIndex = new Map();
+        sceneData.imageNames.forEach((name, idx) => {
+            nameToIndex.set(name, idx);
+        });
+
         // BEV
         const bevCanvas = document.getElementById('bev-canvas');
         const bevRange = sceneData.metadata.bev_range || [-40, 40, -40, 40];
@@ -130,8 +136,9 @@ class App {
             displayOrder,
             (camName) => this.visualizer.getCameraInfo(camName),
             (camName) => {
-                const idx = sceneData.imageNames.indexOf(camName);
-                return sceneData.originalImages[idx];
+                const idx = nameToIndex.get(camName);
+                if (idx === undefined) return null;
+                return sceneData.originalImages[idx] || null;
             },
             (camName, queryIdx, opts) => this.visualizer.getCameraPatchAttentionForQuery(queryIdx, camName, opts)
         );

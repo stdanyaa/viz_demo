@@ -12,17 +12,10 @@
       color: #ffffff;
       overflow: hidden;
     }
-    header {
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: rgba(0,0,0,0.6);
-    }
-    header h1 { font-size: 1.1rem; margin-bottom: 2px; }
-    header .hint { font-size: 0.85rem; color: #cfcfcf; }
 
     #loading, #error {
       width: 100vw;
-      height: calc(100vh - 56px);
+      height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -42,7 +35,7 @@
 
     #main {
       width: 100vw;
-      height: calc(100vh - 56px);
+      height: 100vh;
       display: grid;
       /* Keep 3D canvases stable: top row has a floor. */
       grid-template-rows: minmax(210px, 34vh) 1fr;
@@ -140,13 +133,9 @@
     code { color: #9fd0ff; }
 
   </style>
+  <link rel="stylesheet" href="../shared/iframe_theme.css">
 </head>
 <body>
-  <header>
-    <h1>Compare: Occupancy voxels vs VIGT point cloud</h1>
-    <div class="hint">Z-up. <code>WASD</code> move, <code>Q/E</code> yaw, mouse orbit. Load with <code>?scene=...</code></div>
-  </header>
-
   <div id="loading">
     <div class="spinner"></div>
     <div class="hint">Loading scene…</div>
@@ -186,5 +175,6 @@
 
   <!-- Cache-bust (strip-only + infinite wrap) -->
   <script type="module" src="src/app.js?v=2026-01-26-compare-strip-infinite-v3"></script>
+  <script type="module" src="../shared/iframe_autoheight.js"></script>
 </body>
 </html>

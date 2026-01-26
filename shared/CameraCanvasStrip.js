@@ -63,6 +63,10 @@ export class CameraCanvasStrip {
   updateOverlaysForQuery(queryIdx, opts = {}) {
     const { meanHeads = true, headIdx = null, globalMax = null, colorScheme = 'red' } = opts;
 
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'shared/CameraCanvasStrip.js:updateOverlaysForQuery',message:'updateOverlaysForQuery called',data:{queryIdx,meanHeads,headIdx,hasGlobalMax:globalMax!=null,colorScheme},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
     for (const camName of this.cameraNames) {
       const item = this._main.get(camName);
       if (!item) continue;
@@ -101,6 +105,11 @@ export class CameraCanvasStrip {
         this._main.clear();
         this._clones.clear();
       },
+      onRenderEnd: () => {
+        // When InfiniteStrip re-renders (e.g., iframe autoheight triggers resize),
+        // clones are re-created and need to be synced again.
+        requestAnimationFrame(() => this._syncClonesFromMain());
+      },
       renderMainItem: (el, it) => {
         const camName = it.key;
 
@@ -121,6 +130,27 @@ export class CameraCanvasStrip {
         renderer.clear();
         renderer.renderImage(img);
         renderer.renderPatchGrid(patchInfo, 'cyan', 0.15);
+
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'shared/CameraCanvasStrip.js:renderMainItem',message:'camera canvas initial render',data:{camName,iw:img?.naturalWidth||img?.width||0,ih:img?.naturalHeight||img?.height||0,canvasW:canvas?.width||0,canvasH:canvas?.height||0,cssW:canvas?.getBoundingClientRect?.().width||0,cssH:canvas?.getBoundingClientRect?.().height||0},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+
+        // If the image isn't decoded yet (rare, but can happen with iframe resize races),
+        // re-render once it loads.
+        const iw = img?.naturalWidth || img?.width || 0;
+        const ih = img?.naturalHeight || img?.height || 0;
+        if (img && (!iw || !ih) && typeof img.addEventListener === 'function') {
+          const onLoad = () => {
+            img.removeEventListener('load', onLoad);
+            const again = this._main.get(camName);
+            if (!again) return;
+            again.renderer.clear();
+            again.renderer.renderImage(img);
+            again.renderer.renderPatchGrid(again.patchInfo, 'cyan', 0.15);
+            this._syncClonesFromMain();
+          };
+          img.addEventListener('load', onLoad, { once: true });
+        }
       },
       renderCloneItem: (el, it, mainEl) => {
         void mainEl;
@@ -149,6 +179,11 @@ export class CameraCanvasStrip {
       const main = this._main.get(camName);
       if (!main) continue;
       const clones = this._clones.get(camName) || [];
+
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'shared/CameraCanvasStrip.js:_syncClonesFromMain',message:'sync clones from main',data:{camName,clones:clones.length,mainW:main.canvas?.width||0,mainH:main.canvas?.height||0},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+
       for (const c of clones) {
         c.width = main.canvas.width;
         c.height = main.canvas.height;

@@ -105,14 +105,19 @@ class ForwardAttentionVisualizer {
         
         cameras.forEach(({ name, idx, img, origImg }) => {
             let H, W;
-            if (img instanceof Image || (img && img.height && img.width)) {
-                H = img.height;
-                W = img.width;
+            if (img instanceof Image || img) {
+                // Prefer natural dimensions (robust for `new Image()` not in DOM).
+                H = img.naturalHeight || img.height || 0;
+                W = img.naturalWidth || img.width || 0;
             } else if (Array.isArray(img)) {
                 H = img[0].length;
                 W = img[0][0].length;
             } else {
                 throw new Error(`Unknown image format for camera ${name}`);
+            }
+
+            if (!H || !W) {
+                throw new Error(`Camera image has zero size for ${name} (not loaded/decoded yet)`);
             }
             
             const patchH = Math.floor(H / this.patchSize);
@@ -120,9 +125,9 @@ class ForwardAttentionVisualizer {
             const nPatches = patchH * patchW;
             
             let origH, origW;
-            if (origImg instanceof Image || (origImg && origImg.height && origImg.width)) {
-                origH = origImg.height;
-                origW = origImg.width;
+            if (origImg instanceof Image || origImg) {
+                origH = origImg.naturalHeight || origImg.height || 0;
+                origW = origImg.naturalWidth || origImg.width || 0;
             } else if (Array.isArray(origImg)) {
                 origH = origImg[0].length;
                 origW = origImg[0][0].length;

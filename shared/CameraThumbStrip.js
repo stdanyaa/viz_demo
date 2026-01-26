@@ -42,6 +42,13 @@ export class CameraThumbStrip {
         this._main.clear();
         this._clones.clear();
       },
+      onRenderEnd: () => {
+        // When InfiniteStrip re-renders (e.g., iframe autoheight triggers resize),
+        // clones are re-created and need to be synced again from the main canvases.
+        requestAnimationFrame(() => {
+          for (const camName of this.cameraNames) this._syncClonesFromMain(camName);
+        });
+      },
       onItemClick: (it) => {
         this.selectCamera(it.key);
       },
@@ -113,6 +120,21 @@ export class CameraThumbStrip {
     const main = this._main.get(camName);
     if (main) this._drawIntoCanvas(camName, main.canvas, main.ctx, image, regions);
     this._syncClonesFromMain(camName);
+
+    // If image isn't ready yet, re-render once it loads.
+    const iw = image?.naturalWidth || image?.width || 0;
+    const ih = image?.naturalHeight || image?.height || 0;
+    if (image && (!iw || !ih) && typeof image.addEventListener === 'function') {
+      const onLoad = () => {
+        // ensure state still matches this image
+        const st = this._state.get(camName);
+        if (!st || st.image !== image) return;
+        const m = this._main.get(camName);
+        if (m) this._drawIntoCanvas(camName, m.canvas, m.ctx, image, st.regions || []);
+        this._syncClonesFromMain(camName);
+      };
+      image.addEventListener('load', onLoad, { once: true });
+    }
   }
 
   _drawIntoCanvas(camName, canvas, ctx, image, regions) {
@@ -120,16 +142,29 @@ export class CameraThumbStrip {
       if (!ctx) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (!image || !image.width || !image.height) return;
+      // IMPORTANT:
+      // Images are often created via `new Image()` and may never be attached to the DOM.
+      // In that case, `image.width/height` can be 0 or unreliable; prefer natural sizes.
+      const iw = image?.naturalWidth || image?.width || 0;
+      const ih = image?.naturalHeight || image?.height || 0;
+      if (!image || !iw || !ih) {
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4',location:'shared/CameraThumbStrip.js:_drawIntoCanvas',message:'thumb draw skipped (image not ready)',data:{camName,iw,ih,canvasW:canvas?.width||0,canvasH:canvas?.height||0},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        return;
+      }
 
       // Scale image to fit thumbnail
-      const scale = Math.min(canvas.width / image.width, canvas.height / image.height);
-      const width = image.width * scale;
-      const height = image.height * scale;
+      const scale = Math.min(canvas.width / iw, canvas.height / ih);
+      const width = iw * scale;
+      const height = ih * scale;
       const x = (canvas.width - width) / 2;
       const y = (canvas.height - height) / 2;
 
       ctx.drawImage(image, x, y, width, height);
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4',location:'shared/CameraThumbStrip.js:_drawIntoCanvas',message:'thumb drawn',data:{camName,iw,ih,canvasW:canvas?.width||0,canvasH:canvas?.height||0,regions:regions?.length||0},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       // Draw region indicators with matching colors
       if (regions && regions.length > 0) {
@@ -138,8 +173,8 @@ export class CameraThumbStrip {
           const { xRange, yRange, color = 'yellow' } = regions[i];
           const [x1, x2] = xRange;
           const [y1, y2] = yRange;
-          const scaleX = width / image.width;
-          const scaleY = height / image.height;
+          const scaleX = width / iw;
+          const scaleY = height / ih;
           ctx.strokeStyle = color;
           ctx.strokeRect(
             x + x1 * scaleX,
@@ -158,6 +193,11 @@ export class CameraThumbStrip {
     const main = this._main.get(camName);
     if (!main) return;
     const clones = this._clones.get(camName) || [];
+
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'shared/CameraThumbStrip.js:_syncClonesFromMain',message:'thumb strip sync clones',data:{camName,clones:clones.length,mainW:main.canvas?.width||0,mainH:main.canvas?.height||0},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
     for (const c of clones) {
       c.width = main.canvas.width;
       c.height = main.canvas.height;

@@ -19,11 +19,16 @@ export class CameraRenderer {
     
     renderImage(image) {
         if (!image) return;
-        
+
+        // Prefer natural dimensions (robust for `new Image()` not in DOM).
+        const w = image.naturalWidth || image.width || 0;
+        const h = image.naturalHeight || image.height || 0;
+        if (!w || !h) return;
+
         // Resize canvas to match image
-        this.canvas.width = image.width;
-        this.canvas.height = image.height;
-        this.ctx.drawImage(image, 0, 0, image.width, image.height);
+        this.canvas.width = w;
+        this.canvas.height = h;
+        this.ctx.drawImage(image, 0, 0, w, h);
     }
     
     /**
