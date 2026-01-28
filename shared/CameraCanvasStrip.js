@@ -127,10 +127,6 @@ export class CameraCanvasStrip {
         renderer.renderImage(img);
         renderer.renderPatchGrid(patchInfo, 'cyan', 0.15);
 
-        // #region agent log
-        fetch('http://127.0.0.1:7244/ingest/d2a98541-3c7b-4fd8-a1eb-81e975a90bbd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'shared/CameraCanvasStrip.js:renderMainItem',message:'camera canvas initial render',data:{camName,iw:img?.naturalWidth||img?.width||0,ih:img?.naturalHeight||img?.height||0,canvasW:canvas?.width||0,canvasH:canvas?.height||0,cssW:canvas?.getBoundingClientRect?.().width||0,cssH:canvas?.getBoundingClientRect?.().height||0},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-
         // If the image isn't decoded yet (rare, but can happen with iframe resize races),
         // re-render once it loads.
         const iw = img?.naturalWidth || img?.width || 0;

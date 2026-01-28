@@ -127,6 +127,8 @@ class App {
         // Camera Gallery - use display order
         const stripContainer = document.getElementById('camera-strip');
         this.cameraGallery = new CameraThumbStrip(stripContainer, displayOrder, (camName) => this.selectCamera(camName), {
+            thumbWidth: 240,
+            thumbHeight: 160,
             alwaysPannable: true,
             maxSegments: 7
         });

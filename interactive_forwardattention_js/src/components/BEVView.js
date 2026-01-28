@@ -66,9 +66,8 @@ export class BEVView {
     
     resizeCanvas() {
         const container = this.canvas.parentElement;
-        // Keep BEV reasonably sized for a right-column layout.
-        // (This demo is shown in an iframe often, so avoid huge minimums.)
-        const maxSize = Math.min(container.clientWidth - 40, 600);
+        // In compact iframe embeds, use more of the available width (but cap it).
+        const maxSize = Math.min(container.clientWidth, 900);
         const size = Math.max(360, maxSize);
         this.canvas.width = size;
         this.canvas.height = size;

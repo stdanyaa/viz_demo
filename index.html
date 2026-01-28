@@ -258,23 +258,46 @@
 <section class="section hero is-light" id="interactive-demos">
   <!-- Use a wider container than the paper text column -->
   <div class="container is-widescreen">
-    <h2 class="title is-3">Interactive demos</h2>
-    <div class="content has-text-justified">
-      <p>
-        These are fully interactive web demos embedded directly in this page. If a demo feels cramped, use the “Open fullscreen” link on each card.
-      </p>
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Interactive demos</h2>
+          <div class="content has-text-justified">
+            <p>
+              These are fully interactive web demos embedded directly in this page. If a demo feels cramped, use the “Open fullscreen” link in each section.
+            </p>
+          </div>
+
+          <nav class="demo-index" aria-label="Demo index">
+            <ul>
+              <li><a href="#demo-compare">Compare: occupancy vs point cloud</a></li>
+              <li><a href="#demo-drop-cameras">Drop cameras</a></li>
+              <li><a href="#demo-forward-attention">Forward attention</a></li>
+              <li><a href="#demo-inverse-attention">Inverse attention</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
     </div>
 
-    <div class="demo-grid" role="list">
-      <article class="demo-card" role="listitem">
-        <div class="demo-card__header">
-          <div>
-            <h3 class="demo-card__title">Compare: occupancy vs point cloud</h3>
-            <p class="demo-card__subtitle">Side-by-side WebGL view with camera strip.</p>
-          </div>
-          <div class="demo-card__actions">
-            <a class="button is-small is-dark" target="_blank" rel="noopener"
-               href="./interactive_compare_js/index.html?scene=data/scenes/frame_000121/scene.json">Open fullscreen</a>
+    <div class="demo-subsections">
+      <section class="demo-subsection" id="demo-compare">
+        <div class="demo-subsection__body">
+          <div class="container is-max-desktop">
+            <div class="columns is-centered">
+              <div class="column is-four-fifths">
+              <h3 class="title is-4">Compare: occupancy vs point cloud</h3>
+              <div class="content has-text-justified">
+                <p class="demo-subtitle">Side-by-side WebGL view with camera strip.</p>
+                <!-- TODO(danya): write 2–4 sentences describing what this demo shows, how to interact, and what to look for. -->
+                <p><em>TODO: Add description text here.</em></p>
+              </div>
+              <div class="demo-subsection__actions">
+                <a class="button is-small is-dark" target="_blank" rel="noopener"
+                   href="./interactive_compare_js/index.html?scene=data/scenes/frame_000121/scene.json">Open fullscreen</a>
+              </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="demo-embed">
@@ -285,17 +308,25 @@
             referrerpolicy="no-referrer"
             src="./interactive_compare_js/index.html?scene=data/scenes/frame_000121/scene.json"></iframe>
         </div>
-      </article>
+      </section>
 
-      <article class="demo-card" role="listitem">
-        <div class="demo-card__header">
-          <div>
-            <h3 class="demo-card__title">Drop cameras</h3>
-            <p class="demo-card__subtitle">Click thumbnails / frustums to swap a camera subset.</p>
-          </div>
-          <div class="demo-card__actions">
-            <a class="button is-small is-dark" target="_blank" rel="noopener"
-               href="./interactive_dropcameras_js/index.html">Open fullscreen</a>
+      <section class="demo-subsection" id="demo-drop-cameras">
+        <div class="demo-subsection__body">
+          <div class="container is-max-desktop">
+            <div class="columns is-centered">
+              <div class="column is-four-fifths">
+              <h3 class="title is-4">Drop cameras</h3>
+              <div class="content has-text-justified">
+                <p class="demo-subtitle">Click thumbnails / frustums to swap a camera subset.</p>
+                <!-- TODO(danya): write 2–4 sentences describing what this demo shows, how to interact, and what to look for. -->
+                <p><em>TODO: Add description text here.</em></p>
+              </div>
+              <div class="demo-subsection__actions">
+                <a class="button is-small is-dark" target="_blank" rel="noopener"
+                   href="./interactive_dropcameras_js/index.html">Open fullscreen</a>
+              </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="demo-embed demo-embed--tall">
@@ -306,17 +337,25 @@
             referrerpolicy="no-referrer"
             src="./interactive_dropcameras_js/index.html"></iframe>
         </div>
-      </article>
+      </section>
 
-      <article class="demo-card" role="listitem">
-        <div class="demo-card__header">
-          <div>
-            <h3 class="demo-card__title">Forward attention</h3>
-            <p class="demo-card__subtitle">Click a BEV query to view attended camera patches.</p>
-          </div>
-          <div class="demo-card__actions">
-            <a class="button is-small is-dark" target="_blank" rel="noopener"
-               href="./interactive_forwardattention_js/index.html">Open fullscreen</a>
+      <section class="demo-subsection" id="demo-forward-attention">
+        <div class="demo-subsection__body">
+          <div class="container is-max-desktop">
+            <div class="columns is-centered">
+              <div class="column is-four-fifths">
+              <h3 class="title is-4">Forward attention</h3>
+              <div class="content has-text-justified">
+                <p class="demo-subtitle">Click a BEV query to view attended camera patches.</p>
+                <!-- TODO(danya): write 2–4 sentences describing what this demo shows, how to interact, and what to look for. -->
+                <p><em>TODO: Add description text here.</em></p>
+              </div>
+              <div class="demo-subsection__actions">
+                <a class="button is-small is-dark" target="_blank" rel="noopener"
+                   href="./interactive_forwardattention_js/index.html">Open fullscreen</a>
+              </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="demo-embed">
@@ -327,17 +366,25 @@
             referrerpolicy="no-referrer"
             src="./interactive_forwardattention_js/index.html"></iframe>
         </div>
-      </article>
+      </section>
 
-      <article class="demo-card" role="listitem">
-        <div class="demo-card__header">
-          <div>
-            <h3 class="demo-card__title">Inverse attention</h3>
-            <p class="demo-card__subtitle">Select camera regions to see which BEV queries attend to them.</p>
-          </div>
-          <div class="demo-card__actions">
-            <a class="button is-small is-dark" target="_blank" rel="noopener"
-               href="./interactive_invattention_js/index.html">Open fullscreen</a>
+      <section class="demo-subsection" id="demo-inverse-attention">
+        <div class="demo-subsection__body">
+          <div class="container is-max-desktop">
+            <div class="columns is-centered">
+              <div class="column is-four-fifths">
+              <h3 class="title is-4">Inverse attention</h3>
+              <div class="content has-text-justified">
+                <p class="demo-subtitle">Select camera regions to see which BEV queries attend to them.</p>
+                <!-- TODO(danya): write 2–4 sentences describing what this demo shows, how to interact, and what to look for. -->
+                <p><em>TODO: Add description text here.</em></p>
+              </div>
+              <div class="demo-subsection__actions">
+                <a class="button is-small is-dark" target="_blank" rel="noopener"
+                   href="./interactive_invattention_js/index.html">Open fullscreen</a>
+              </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="demo-embed">
@@ -348,7 +395,7 @@
             referrerpolicy="no-referrer"
             src="./interactive_invattention_js/index.html"></iframe>
         </div>
-      </article>
+      </section>
     </div>
   </div>
 </section>

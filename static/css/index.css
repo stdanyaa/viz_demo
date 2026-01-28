@@ -250,6 +250,64 @@ body {
   margin-top: 1.5rem;
 }
 
+.demo-index {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.demo-index ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.demo-index li + li {
+  margin-top: 0.25rem;
+}
+
+.demo-index a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.demo-index a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.demo-subsections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.demo-subsection {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.demo-subsection__body {
+  padding: 1.75rem 0 0.5rem;
+}
+
+.demo-subtitle {
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.demo-subsection__actions {
+  margin-top: 0.75rem;
+}
+
 .demo-card {
   background: var(--background-primary);
   border: 1px solid var(--border-color);
@@ -316,6 +374,9 @@ body {
 /* Keep demos one-per-row (full width) */
 
 @media screen and (max-width: 768px) {
+  .demo-subsection__body {
+    padding: 1.25rem 0 0.5rem;
+  }
   .demo-embed {
     height: auto;
     min-height: 520px;
