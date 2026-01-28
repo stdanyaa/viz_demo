@@ -31,9 +31,25 @@ class App {
         this.cameraView = null;
         this.bevView = null;
         this.controls = null;
+        this.bevBaseImgEl = document.getElementById('bev-base-img');
         
         // Setup event listeners
         this.setupEventListeners();
+    }
+
+    /**
+     * Optional: set a pre-rendered BEV base image (e.g., Python-generated).
+     * Pass null/empty to disable.
+     */
+    setBevBaseImage(src) {
+        if (!this.bevBaseImgEl) return;
+        if (!src) {
+            this.bevBaseImgEl.src = '';
+            this.bevBaseImgEl.classList.add('hidden');
+            return;
+        }
+        this.bevBaseImgEl.src = src;
+        this.bevBaseImgEl.classList.remove('hidden');
     }
     
     /**
@@ -187,6 +203,10 @@ class App {
             (head) => {
                 this.headSelection = head;
                 this.updateBEVView();
+            },
+            (meters) => {
+                if (!this.bevView) return;
+                this.bevView.setZoomMeters(meters);
             }
         );
     }
@@ -532,8 +552,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if scene path is provided in URL
     const urlParams = new URLSearchParams(window.location.search);
     const scenePath = urlParams.get('scene') || defaultScene;
+    const bevBase = urlParams.get('bev_base') || '';
     
     app.loadScene(scenePath);
+    if (bevBase) app.setBevBaseImage(bevBase);
     
     // Make app globally available for debugging
     window.app = app;

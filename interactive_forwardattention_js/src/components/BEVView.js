@@ -3,7 +3,8 @@
  * Displays BEV grid + LiDAR background and supports click selection of a cell.
  */
 
-import { BEVRenderer } from '../renderers/BEVRenderer.js';
+import { BEVFrameRenderer } from '../../../shared/BEVFrameRenderer.js';
+import { metersToCenteredWindow, pixelToSelection } from '../../../shared/BEVViewWindow.js';
 
 export class BEVView {
     /**
@@ -20,7 +21,13 @@ export class BEVView {
         this.gridSize = gridSize;
         this.onSelect = onSelect;
         
-        this.renderer = new BEVRenderer(canvas, bevRange, gridSize);
+        // Default zoom for forward: medium (40x40 meters) centered window.
+        this.viewWindow = metersToCenteredWindow(this.gridSize, 40, this.bevRange);
+        this.renderer = new BEVFrameRenderer(canvas, {
+            bevRange: this.bevRange,
+            gridSize: this.gridSize,
+            viewWindow: this.viewWindow
+        });
         this.lidarPts = null;
         
         this.selected = null; // { xIdx, yIdx, queryIdx }
@@ -37,7 +44,14 @@ export class BEVView {
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
-            const sel = this._pixelToCellSelection(x, y);
+            const sel = pixelToSelection(
+                x,
+                y,
+                this.canvas.width,
+                this.canvas.height,
+                this.gridSize,
+                this.viewWindow
+            );
             if (!sel) return;
             
             this.selected = sel;
@@ -47,21 +61,13 @@ export class BEVView {
         });
     }
     
-    _pixelToCellSelection(pixelX, pixelY) {
-        const cellW = this.canvas.width / this.gridSize;
-        const cellH = this.canvas.height / this.gridSize;
-        
-        const col = Math.floor(pixelX / cellW);
-        const row = Math.floor(pixelY / cellH);
-        
-        if (col < 0 || col >= this.gridSize || row < 0 || row >= this.gridSize) return null;
-        
-        // Match the renderer's flipped axes:
-        const xIdx = this.gridSize - 1 - col;
-        const yIdx = this.gridSize - 1 - row;
-        const queryIdx = yIdx * this.gridSize + xIdx;
-        
-        return { xIdx, yIdx, queryIdx };
+    /**
+     * Set BEV zoom preset in meters (e.g. 80, 40, 20) as a centered sub-grid.
+     */
+    setZoomMeters(metersSide) {
+        this.viewWindow = metersToCenteredWindow(this.gridSize, metersSide, this.bevRange);
+        this.renderer.setViewWindow(this.viewWindow);
+        this.render();
     }
     
     resizeCanvas() {

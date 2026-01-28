@@ -3,7 +3,8 @@
  * Displays BEV attention heatmap
  */
 
-import { BEVRenderer } from '../renderers/BEVRenderer.js';
+import { BEVFrameRenderer } from '../../../shared/BEVFrameRenderer.js';
+import { metersToCenteredWindow } from '../../../shared/BEVViewWindow.js';
 
 export class BEVView {
     /**
@@ -15,8 +16,15 @@ export class BEVView {
         this.container = container;
         this.canvas = canvas;
         this.bevRange = bevRange;
+        this.gridSize = 32;
         
-        this.renderer = new BEVRenderer(canvas, bevRange);
+        // Default zoom for inverse: full (80x80 meters).
+        this.viewWindow = metersToCenteredWindow(this.gridSize, 80, this.bevRange);
+        this.renderer = new BEVFrameRenderer(canvas, {
+            bevRange: this.bevRange,
+            gridSize: this.gridSize,
+            viewWindow: this.viewWindow
+        });
         this.lidarPts = null;
         this.regions = []; // Array of {bevMap, color, alpha}
         
@@ -62,6 +70,15 @@ export class BEVView {
         this.regions = [];
         this.render();
     }
+
+    /**
+     * Set BEV zoom preset in meters (e.g. 80 or 40) as a centered sub-grid.
+     */
+    setZoomMeters(metersSide) {
+        this.viewWindow = metersToCenteredWindow(this.gridSize, metersSide, this.bevRange);
+        this.renderer.setViewWindow(this.viewWindow);
+        this.render();
+    }
     
     /**
      * Render the BEV view
@@ -74,20 +91,10 @@ export class BEVView {
             this.renderer.renderLidarPoints(this.lidarPts, 'grey', 0.1, 1); // 10% alpha
         }
         
-        // Render attention heatmaps - use same path for single and multiple
-        if (this.regions.length > 0) {
-            // Always use multiple regions rendering for consistency
-            // Single region will just have one item in the array
-            this.renderer.renderMultipleRegions(this.regions);
-        }
+        // Render multi-region overlays
+        if (this.regions.length > 0) this.renderer.renderRegions(this.regions);
         
         // Render grid
         this.renderer.renderGrid('white', 0.1);
-        
-        // Render labels
-        const title = this.regions.length > 0
-            ? `BEV Attention (${this.regions.length} region${this.regions.length > 1 ? 's' : ''})`
-            : 'BEV Attention Map';
-        this.renderer.renderLabels(title);
     }
 }

@@ -43,6 +43,14 @@
                         <div class="bev-controls">
                             <div class="control-group">
                                 <label>
+                                    Zoom:
+                                    <select id="bev-zoom-select">
+                                        <option value="80" selected>80×80m</option>
+                                        <option value="40">40×40m</option>
+                                        <option value="20">20×20m</option>
+                                    </select>
+                                </label>
+                                <label>
                                     Aggregation:
                                     <select id="aggregation-select">
                                         <option value="sum">Sum</option>
@@ -65,6 +73,7 @@
                 <section id="bev-view" class="bev-view">
                     <h2>BEV Attention Map</h2>
                     <div class="bev-container">
+                        <img id="bev-base-img" class="bev-base-img hidden" alt="BEV base layer" />
                         <canvas id="bev-canvas"></canvas>
                     </div>
                 </section>

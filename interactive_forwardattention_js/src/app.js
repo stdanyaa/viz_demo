@@ -26,9 +26,11 @@ class App {
         
         this.selectionStatusEl = document.getElementById('selection-status');
         this.headSelectEl = document.getElementById('heads-select');
+        this.bevZoomSelectEl = document.getElementById('bev-zoom-select');
         this.alphaSliderEl = document.getElementById('alpha-slider');
         this.alphaValueEl = document.getElementById('alpha-value');
         this.colorSchemeEl = document.getElementById('colorscheme-select');
+        this.bevBaseImgEl = document.getElementById('bev-base-img');
         
         // Components
         this.bevView = null;
@@ -66,6 +68,29 @@ class App {
                 this.updateCameraOverlays();
             });
         }
+
+        if (this.bevZoomSelectEl) {
+            this.bevZoomSelectEl.addEventListener('change', (e) => {
+                const meters = parseInt(e.target.value, 10);
+                if (!this.bevView || !Number.isFinite(meters)) return;
+                this.bevView.setZoomMeters(meters);
+            });
+        }
+    }
+
+    /**
+     * Optional: set a pre-rendered BEV base image (e.g., Python-generated).
+     * Pass null/empty to disable.
+     */
+    setBevBaseImage(src) {
+        if (!this.bevBaseImgEl) return;
+        if (!src) {
+            this.bevBaseImgEl.src = '';
+            this.bevBaseImgEl.classList.add('hidden');
+            return;
+        }
+        this.bevBaseImgEl.src = src;
+        this.bevBaseImgEl.classList.remove('hidden');
     }
     
     populateHeadOptions() {
@@ -204,8 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const urlParams = new URLSearchParams(window.location.search);
     const scenePath = urlParams.get('scene') || defaultScene;
+    const bevBase = urlParams.get('bev_base') || '';
     
     app.loadScene(scenePath);
+    if (bevBase) app.setBevBaseImage(bevBase);
     window.app = app;
 });
 

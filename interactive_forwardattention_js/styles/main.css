@@ -177,6 +177,19 @@ header p {
     justify-content: center;
     align-items: flex-start; /* keep BEV attached to top */
     min-height: 420px;
+    position: relative;
+}
+
+#bev-base-img,
+.bev-base-img {
+    position: absolute;
+    inset: 1rem; /* match container padding */
+    width: calc(100% - 2rem);
+    height: calc(100% - 2rem);
+    object-fit: contain;
+    border-radius: 4px;
+    pointer-events: none;
+    user-select: none;
 }
 
 #bev-canvas {
@@ -185,6 +198,8 @@ header p {
     border-radius: 4px;
     background: #000;
     cursor: crosshair;
+    position: relative;
+    z-index: 1;
 }
 
 .camera-strip {

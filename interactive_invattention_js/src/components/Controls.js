@@ -9,10 +9,11 @@ export class Controls {
      * @param {Function} onAggregationChange - Callback when aggregation changes
      * @param {Function} onHeadChange - Callback when head selection changes
      */
-    constructor(container, onAggregationChange, onHeadChange) {
+    constructor(container, onAggregationChange, onHeadChange, onZoomChange = null) {
         this.container = container;
         this.onAggregationChange = onAggregationChange;
         this.onHeadChange = onHeadChange;
+        this.onZoomChange = onZoomChange;
         
         this.aggregation = 'sum';
         this.headSelection = 'mean';
@@ -24,6 +25,18 @@ export class Controls {
      * Setup control elements
      */
     setupControls() {
+        // Zoom selector (optional)
+        const zoomSelect = this.container.querySelector('#bev-zoom-select');
+        if (zoomSelect) {
+            zoomSelect.addEventListener('change', (e) => {
+                const meters = parseInt(e.target.value, 10);
+                // Bubble up as a synthetic "aggregation" change? No: expose via callback if present.
+                if (typeof this.onZoomChange === 'function' && Number.isFinite(meters)) {
+                    this.onZoomChange(meters);
+                }
+            });
+        }
+
         // Aggregation selector
         const aggSelect = this.container.querySelector('#aggregation-select');
         if (aggSelect) {

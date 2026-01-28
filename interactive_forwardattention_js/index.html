@@ -33,6 +33,14 @@
                                 <select id="heads-select"></select>
                             </label>
                             <label>
+                                Zoom:
+                                <select id="bev-zoom-select">
+                                    <option value="80">80×80m</option>
+                                    <option value="40" selected>40×40m</option>
+                                    <option value="20">20×20m</option>
+                                </select>
+                            </label>
+                            <label>
                                 Overlay alpha:
                                 <input id="alpha-slider" type="range" min="0" max="1" step="0.05" value="0.6">
                                 <span id="alpha-value">0.60</span>
@@ -54,6 +62,7 @@
                     <section id="bev-view" class="bev-view">
                         <h2>BEV (click a cell)</h2>
                         <div class="bev-container">
+                            <img id="bev-base-img" class="bev-base-img hidden" alt="BEV base layer" />
                             <canvas id="bev-canvas"></canvas>
                         </div>
                     </section>
