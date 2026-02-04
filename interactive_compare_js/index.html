@@ -54,6 +54,60 @@
       z-index: 2;
     }
 
+    #controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    #controls-bar label {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.75);
+      user-select: none;
+      white-space: nowrap;
+    }
+    #controls-bar select {
+      background: #ffffff;
+      color: #111827;
+      border: 0;
+      border-radius: 10px;
+      padding: 6px 28px 6px 10px;
+      outline: none;
+      box-shadow: none;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath fill='%236B7280' d='M5.25 7.5L10 12.25 14.75 7.5 16 8.75l-6 6-6-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 12px 12px;
+      cursor: pointer;
+    }
+    #reset-view {
+      font-size: 0.85rem;
+      color: #111827;
+      text-decoration: none;
+      border: 0;
+      border-radius: 10px;
+      padding: 6px 10px;
+      background: #ffffff;
+      box-shadow: none;
+      cursor: pointer;
+    }
+    #reset-view:hover { text-decoration: none; }
+    #reset-view:focus { outline: none; }
+    .hintline {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.65);
+      white-space: nowrap;
+    }
+
     #thumb-strip {
       display: flex;
       gap: 10px;
@@ -110,26 +164,75 @@
       position: absolute;
       inset: 0;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(var(--pane-count, 2), 1fr);
     }
-    #gl-canvas-left, #gl-canvas-right { width: 100%; height: 100%; display: block; }
+    #gl-canvas-left, #gl-canvas-right, #gl-canvas-third { width: 100%; height: 100%; display: block; }
+    .hidden { display: none !important; }
     #viewport-labels {
       position: absolute;
       left: 12px;
       top: 10px;
-      display: flex;
+      right: 12px;
+      display: grid;
+      grid-template-columns: repeat(var(--pane-count, 2), 1fr);
       gap: 10px;
       pointer-events: none;
       font-size: 0.85rem;
       color: #d6d6d6;
     }
-    .tag {
+    /* NOTE: shared iframe CSS overrides `.tag` for compare demo.
+       Use higher specificity + !important so our pills are truly opaque. */
+    #viewport-labels .tag {
       padding: 6px 10px;
       border-radius: 10px;
-      background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,255,255,0.10);
+      background: #ffffff !important;
+      border: 0 !important;
+      color: #111827 !important;
+      justify-self: start;
+      box-shadow: none !important;
     }
-    .tag.right { margin-left: calc(50vw - 56px); } /* approx; purely decorative */
+    .tag.has-select {
+      pointer-events: auto;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    .tag.has-select select {
+      background: transparent;
+      color: inherit;
+      border: 0;
+      outline: none;
+      font-size: 0.85rem;
+      padding: 2px 2px;
+      -webkit-appearance: none;
+      appearance: none;
+      box-shadow: none;
+      cursor: pointer;
+    }
+    .tag.has-select select:disabled { opacity: 0.6; }
+    /* Custom arrow on the *pill* (not the select) */
+    #viewport-labels .tag.has-select {
+      position: relative;
+      padding-right: 26px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath fill='%236B7280' d='M5.25 7.5L10 12.25 14.75 7.5 16 8.75l-6 6-6-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 12px 12px;
+    }
+    /* Extra explicit indicator (triangle), even if native arrows show/hide. */
+    #viewport-labels .tag.has-select::after {
+      content: "";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-30%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 6px solid #6b7280;
+      opacity: 0.9;
+      pointer-events: none;
+    }
     code { color: #9fd0ff; }
 
   </style>
@@ -149,6 +252,17 @@
 
   <div id="main" class="hidden">
     <section id="top-pane">
+      <div id="controls-bar" aria-label="Compare controls">
+        <div class="controls-left">
+          <label for="pane-mode">Panes</label>
+          <select id="pane-mode">
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+          <a id="reset-view" href="#" aria-label="Reset view">Reset</a>
+        </div>
+        <div class="hintline">WASD / Q,E, mouse orbit</div>
+      </div>
       <div id="thumb-strip" aria-label="Camera images"></div>
     </section>
 
@@ -156,10 +270,16 @@
       <div id="bottom-split">
         <canvas id="gl-canvas-left"></canvas>
         <canvas id="gl-canvas-right"></canvas>
+        <canvas id="gl-canvas-third" class="hidden"></canvas>
       </div>
       <div id="viewport-labels">
-        <div class="tag">Occupancy voxels</div>
-        <div class="tag right">VIGT point cloud</div>
+        <div class="tag" id="label-occ">Occupancy voxels</div>
+        <div class="tag has-select" id="label-pc-a">
+          <select id="pc-select-a" aria-label="PointCloud A"></select>
+        </div>
+        <div class="tag has-select hidden" id="label-pc-b">
+          <select id="pc-select-b" aria-label="PointCloud B"></select>
+        </div>
       </div>
     </section>
   </div>

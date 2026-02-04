@@ -279,6 +279,13 @@ body {
   text-decoration: underline;
 }
 
+/* Widen embedded demos without going full-fluid. */
+#interactive-demos .demo-embeds-wide {
+  /* Bulma caps `.container` at 1152px on widescreens; override. */
+  max-width: 1400px !important;
+  width: 100%;
+}
+
 .demo-subsections {
   display: flex;
   flex-direction: column;

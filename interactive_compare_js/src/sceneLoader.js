@@ -12,7 +12,13 @@ async function fetchJson(url) {
  * {
  *   "images": [{ "name": "...", "url": "images/ring_front_center.jpg" }, ...],
  *   "occupancy": { "url": "occ_frame000121.json" },
- *   "pointcloud": { "url": "vigt_frame000121.json" }
+ *   // Backward-compat:
+ *   "pointcloud": { "url": "vigt_frame000121.json" },
+ *   // New (preferred):
+ *   "pointclouds": [
+ *     { "key": "vigt", "label": "ViGT", "url": "vigt_frame000121.json" },
+ *     { "key": "gt", "label": "GT", "url": "gt_frame000121.json" }
+ *   ]
  * }
  */
 export async function loadCompareScene(sceneJsonPath) {
@@ -25,13 +31,32 @@ export async function loadCompareScene(sceneJsonPath) {
   }) : [];
 
   const occUrl = new URL(manifest?.occupancy?.url, sceneUrl).toString();
-  const pcUrl = new URL(manifest?.pointcloud?.url, sceneUrl).toString();
+  const legacyPcUrl = manifest?.pointcloud?.url ? new URL(manifest.pointcloud.url, sceneUrl).toString() : null;
 
-  const [occupancy, pointcloud] = await Promise.all([
+  const pointclouds = Array.isArray(manifest?.pointclouds)
+    ? manifest.pointclouds
+      .filter((it) => it && typeof it.url === 'string' && it.url.length > 0)
+      .map((it, idx) => {
+        const url = new URL(it.url, sceneUrl).toString();
+        const key = typeof it.key === 'string' && it.key.length > 0 ? it.key : `pc_${idx}`;
+        const label = typeof it.label === 'string' && it.label.length > 0 ? it.label : key;
+        return { key, label, url };
+      })
+    : (legacyPcUrl ? [{ key: 'pointcloud', label: 'Point cloud', url: legacyPcUrl }] : []);
+
+  const [occupancy, pointcloud0] = await Promise.all([
     loadOccupancyData(occUrl),
-    loadPointCloudData(pcUrl),
+    pointclouds[0]?.url ? loadPointCloudData(pointclouds[0].url) : Promise.resolve(null),
   ]);
 
-  return { manifest, images, occupancy, pointcloud };
+  return {
+    manifest,
+    images,
+    occupancy,
+    // Backward-compat: keep `pointcloud` for existing codepaths.
+    pointcloud: pointcloud0,
+    // New normalized list for UI.
+    pointclouds,
+  };
 }
 

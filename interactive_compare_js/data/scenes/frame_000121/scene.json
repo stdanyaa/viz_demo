@@ -36,5 +36,31 @@
   "pointcloud": {
     "url": "vigt_frame000121.json"
   },
-  "image_display_order": ["ring_rear_left", "ring_side_left", "ring_front_left", "ring_front_center", "ring_front_right", "ring_side_right", "ring_rear_right"]
+  "pointclouds": [
+    {
+      "key": "vigt",
+      "label": "ViGT",
+      "url": "vigt_frame000121.json"
+    },
+    {
+      "key": "gt",
+      "label": "GT",
+      "url": "gt_frame000121.json"
+    },
+    {
+      "key": "renderocc",
+      "label": "RenderOcc",
+      "url": "renderocc_frame000121.json"
+    },
+    {
+      "key": "cut3r",
+      "label": "Cut3r",
+      "url": "cut3r_frame000121.json"
+    },
+    {
+      "key": "vggt",
+      "label": "VGGT",
+      "url": "vggt_frame000121.json"
+    }
+  ]
 }

@@ -1,12 +1,13 @@
 /**
  * Compare app entrypoint:
  * - top: image strip
- * - bottom: shared-controls split 3D view (occupancy vs pointcloud)
+ * - bottom: shared-controls multi-view (occupancy + 1-2 point clouds)
  */
 
 import { loadCompareScene } from './sceneLoader.js';
 import { ImageStrip } from '../../shared/ImageStrip.js';
-import { SplitViewRenderer } from './renderers/SplitViewRenderer.js';
+import { loadPointCloudData } from './loaders/pointCloudLoader.js';
+import { CompareMultiViewRenderer } from './renderers/CompareMultiViewRenderer.js';
 
 class App {
   static VERSION = '2026-01-23-compare-v2b-stabletop';
@@ -17,12 +18,26 @@ class App {
     this.errorMsgEl = document.getElementById('error-message');
     this.mainEl = document.getElementById('main');
 
-    this.canvasLeft = document.getElementById('gl-canvas-left');
-    this.canvasRight = document.getElementById('gl-canvas-right');
+    this.canvasOcc = document.getElementById('gl-canvas-left');
+    this.canvasPcA = document.getElementById('gl-canvas-right');
+    this.canvasPcB = document.getElementById('gl-canvas-third');
     this.thumbStripEl = document.getElementById('thumb-strip');
+
+    this.paneModeEl = document.getElementById('pane-mode');
+    this.pcSelectAEl = document.getElementById('pc-select-a');
+    this.pcSelectBEl = document.getElementById('pc-select-b');
+
+    this.labelOccEl = document.getElementById('label-occ');
+    this.labelPcAEl = document.getElementById('label-pc-a');
+    this.labelPcBEl = document.getElementById('label-pc-b');
+    this.resetViewEl = document.getElementById('reset-view');
 
     this.strip = null;
     this.renderer = null;
+
+    this.scene = null;
+    this.pcOptions = [];
+    this.pcCacheByUrl = new Map(); // url -> pointcloudData
   }
 
   async init() {
@@ -32,7 +47,7 @@ class App {
     try {
       console.log('Compare app version:', App.VERSION);
       this.showLoading();
-      const scene = await loadCompareScene(scenePath);
+      this.scene = await loadCompareScene(scenePath);
 
       // IMPORTANT: reveal layout before initializing UI + WebGL.
       // If we init while #main is display:none, canvas/image strip measure as 0x0 until a resize.
@@ -43,7 +58,7 @@ class App {
       await new Promise((r) => requestAnimationFrame(r));
 
       // Top strip (no selection, no-op clicks)
-      const stripItems = scene.images.map((img) => ({
+      const stripItems = this.scene.images.map((img) => ({
         key: img.url,
         src: img.url,
         label: img.name || img.url
@@ -59,12 +74,155 @@ class App {
       // Let images/strip populate before WebGL init (prevents 0x0 canvas on some browsers).
       await new Promise((r) => requestAnimationFrame(r));
 
-      // Bottom split renderer
-      this.renderer = new SplitViewRenderer(this.canvasLeft, this.canvasRight, scene.occupancy, scene.pointcloud);
+      // Options + selectors
+      this.pcOptions = Array.isArray(this.scene.pointclouds) ? this.scene.pointclouds : [];
+      if (!this.pcOptions.length) {
+        throw new Error('No pointcloud entries found in scene manifest.');
+      }
+      this._populatePointCloudSelect(this.pcSelectAEl, this.pcOptions);
+      this._populatePointCloudSelect(this.pcSelectBEl, this.pcOptions);
+
+      // Initial state from URL params (backed by defaults)
+      const panesRaw = Number(urlParams.get('panes') || this.paneModeEl?.value || 2);
+      const panes = panesRaw === 3 ? 3 : 2;
+      if (this.paneModeEl) this.paneModeEl.value = String(panes);
+
+      const defaultA = this._pickDefaultKey(urlParams.get('pcA'), 0);
+      const defaultB = this._pickDefaultKey(urlParams.get('pcB'), 1);
+      if (this.pcSelectAEl) this.pcSelectAEl.value = defaultA;
+      if (this.pcSelectBEl) this.pcSelectBEl.value = defaultB;
+
+      // Apply pane mode (show/hide pcB)
+      this._applyPaneMode(panes);
+
+      // Load initial point clouds
+      const pcAKey = this.pcSelectAEl?.value || defaultA;
+      const pcBKey = this.pcSelectBEl?.value || defaultB;
+      const pcAData = await this._loadPointCloudByKey(pcAKey);
+      const pcBData = panes === 3 ? await this._loadPointCloudByKey(pcBKey) : null;
+
+      // Renderer
+      this._createRenderer(panes, pcAData, pcBData);
+
+      // Hook UI events
+      this._installUiHandlers();
     } catch (err) {
       console.error(err);
       this.showError(err?.message || String(err));
     }
+  }
+
+  _installUiHandlers() {
+    const updateUrl = (key, value) => {
+      const url = new URL(window.location.href);
+      if (value === null || value === undefined || value === '') url.searchParams.delete(key);
+      else url.searchParams.set(key, String(value));
+      window.history.replaceState({}, '', url.toString());
+    };
+
+    this.resetViewEl?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const defA = this._pickDefaultKey(null, 0);
+      const defB = this._pickDefaultKey(null, 1);
+      if (this.paneModeEl) this.paneModeEl.value = '2';
+      if (this.pcSelectAEl) this.pcSelectAEl.value = defA;
+      if (this.pcSelectBEl) this.pcSelectBEl.value = defB;
+      // Clear URL params and reload (simplest/most reliable reset for renderer + layout).
+      const url = new URL(window.location.href);
+      url.searchParams.delete('panes');
+      url.searchParams.delete('pcA');
+      url.searchParams.delete('pcB');
+      window.location.href = url.toString();
+    });
+
+    this.paneModeEl?.addEventListener('change', async () => {
+      const panes = Number(this.paneModeEl.value) === 3 ? 3 : 2;
+      updateUrl('panes', panes);
+
+      this._applyPaneMode(panes);
+
+      // Recreate renderer so we can cleanly add/remove the third canvas.
+      const pcAKey = this.pcSelectAEl?.value || this._pickDefaultKey(null, 0);
+      let pcBKey = this.pcSelectBEl?.value || this._pickDefaultKey(null, 1);
+      if (panes === 3 && !pcBKey) {
+        pcBKey = this._pickDefaultKey(null, 1);
+        if (this.pcSelectBEl) this.pcSelectBEl.value = pcBKey;
+      }
+
+      const pcAData = await this._loadPointCloudByKey(pcAKey);
+      const pcBData = panes === 3 ? await this._loadPointCloudByKey(pcBKey) : null;
+
+      this._createRenderer(panes, pcAData, pcBData);
+    });
+
+    this.pcSelectAEl?.addEventListener('change', async () => {
+      const key = this.pcSelectAEl.value;
+      updateUrl('pcA', key);
+      const data = await this._loadPointCloudByKey(key);
+      this.renderer?.setPointCloud?.(0, data);
+    });
+
+    this.pcSelectBEl?.addEventListener('change', async () => {
+      const panes = Number(this.paneModeEl?.value) === 3 ? 3 : 2;
+      if (panes !== 3) return;
+      const key = this.pcSelectBEl.value;
+      updateUrl('pcB', key);
+      const data = await this._loadPointCloudByKey(key);
+      this.renderer?.setPointCloud?.(1, data);
+    });
+  }
+
+  _createRenderer(panes, pcAData, pcBData) {
+    if (this.renderer?.dispose) this.renderer.dispose();
+    this.renderer = null;
+
+    const canvases = {
+      occ: this.canvasOcc,
+      pcA: this.canvasPcA,
+      pcB: panes === 3 ? this.canvasPcB : null,
+    };
+    this.renderer = new CompareMultiViewRenderer(canvases, this.scene.occupancy, [pcAData, pcBData]);
+  }
+
+  _applyPaneMode(panes) {
+    document.documentElement.style.setProperty('--pane-count', String(panes));
+    const showB = panes === 3;
+    this.canvasPcB?.classList.toggle('hidden', !showB);
+    this.labelPcBEl?.classList.toggle('hidden', !showB);
+    if (this.pcSelectBEl) this.pcSelectBEl.disabled = !showB;
+  }
+
+  _populatePointCloudSelect(selectEl, options) {
+    if (!selectEl) return;
+    selectEl.innerHTML = '';
+    options.forEach((opt) => {
+      const o = document.createElement('option');
+      o.value = opt.key;
+      o.textContent = opt.label;
+      selectEl.appendChild(o);
+    });
+  }
+
+  _pickDefaultKey(desiredKey, fallbackIndex) {
+    const keys = this.pcOptions.map((o) => o.key);
+    if (desiredKey && keys.includes(desiredKey)) return desiredKey;
+    if (keys.length === 0) return '';
+    const idx = Math.max(0, Math.min(keys.length - 1, fallbackIndex));
+    return keys[idx];
+  }
+
+  _getPointCloudOptionByKey(key) {
+    return this.pcOptions.find((o) => o.key === key) || null;
+  }
+
+  async _loadPointCloudByKey(key) {
+    const opt = this._getPointCloudOptionByKey(key);
+    if (!opt) throw new Error(`Unknown pointcloud key: ${key}`);
+    const url = opt.url;
+    if (this.pcCacheByUrl.has(url)) return this.pcCacheByUrl.get(url);
+    const data = await loadPointCloudData(url);
+    this.pcCacheByUrl.set(url, data);
+    return data;
   }
 
   showLoading() {

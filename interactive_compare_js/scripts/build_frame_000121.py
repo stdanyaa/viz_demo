@@ -227,7 +227,11 @@ def main() -> None:
     ap.add_argument("--outroot", type=str, default="interactive_compare_js/data/scenes", help="Output scenes root")
     ap.add_argument("--images", type=str, default="data_raw/frame_121", help="Input images directory")
     ap.add_argument("--occ", type=str, default="data_raw/occ_av2_121_400x400x32.npz", help="Input occupancy npz")
-    ap.add_argument("--vigt_ply", type=str, default="data_raw/frame_000121/vigt_frame000121.ply", help="Input VIGT ply")
+    ap.add_argument("--vigt_ply", type=str, default="data_raw/frame_000121/vigt_frame000121.ply", help="Input ViGT ply")
+    ap.add_argument("--gt_ply", type=str, default="data_raw/frame_000121/gt_frame000121.ply", help="Input GT ply")
+    ap.add_argument("--renderocc_ply", type=str, default="data_raw/frame_000121/renderocc_frame000121.ply", help="Input RenderOcc ply")
+    ap.add_argument("--cut3r_ply", type=str, default="data_raw/frame_000121/cut3r_frame000121.ply", help="Input Cut3r ply")
+    ap.add_argument("--vggt_ply", type=str, default="data_raw/frame_000121/vggt_frame000121.ply", help="Input VGGT ply")
     args = ap.parse_args()
 
     frame_dir = Path(args.outroot) / "frame_000121"
@@ -242,19 +246,35 @@ def main() -> None:
         stem="occ_frame000121",
     )
 
-    # Point cloud
-    # Use the same name as pointcloud viewer to keep paths predictable
-    run_pointcloud_exporter(
-        ply_path=Path(args.vigt_ply),
-        outdir=frame_dir,
-        name="vigt_frame000121",
-    )
+    # Point clouds (export all available sources)
+    pointclouds = [
+        ("vigt", "ViGT", Path(args.vigt_ply), "vigt_frame000121"),
+        ("gt", "GT", Path(args.gt_ply), "gt_frame000121"),
+        ("renderocc", "RenderOcc", Path(args.renderocc_ply), "renderocc_frame000121"),
+        ("cut3r", "Cut3r", Path(args.cut3r_ply), "cut3r_frame000121"),
+        ("vggt", "VGGT", Path(args.vggt_ply), "vggt_frame000121"),
+    ]
+
+    for key, label, ply_path, out_name in pointclouds:
+        if not ply_path.exists():
+            raise FileNotFoundError(f"Missing pointcloud source ({key}): {ply_path}")
+        run_pointcloud_exporter(
+            ply_path=ply_path,
+            outdir=frame_dir,
+            name=out_name,
+        )
 
     scene = {
         "frame": int(args.frame),
         "images": images,
         "occupancy": {"url": occ_json.name},
+        # Backward-compat (legacy single pointcloud)
         "pointcloud": {"url": "vigt_frame000121.json"},
+        # New multi-pointcloud list (used by compare selectors)
+        "pointclouds": [
+            {"key": key, "label": label, "url": f"{out_name}.json"}
+            for (key, label, _ply, out_name) in pointclouds
+        ],
     }
     (frame_dir / "scene.json").write_text(json.dumps(scene, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {frame_dir / 'scene.json'}")
