@@ -1,0 +1,24 @@
+{
+  "attn_weights_file": "attention.bin",
+  "attn_weights_shape": [
+    1,
+    8,
+    1024,
+    1645
+  ],
+  "dtype": "float32",
+  "camera_names": [
+    "ring_front_center",
+    "ring_front_left",
+    "ring_front_right",
+    "ring_rear_left",
+    "ring_rear_right",
+    "ring_side_left",
+    "ring_side_right"
+  ],
+  "n_heads": 8,
+  "n_queries": 1024,
+  "grid_size": 32,
+  "has_cls_tokens": true,
+  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_av2_snatch_a89557fc-1268-36e5-9cce-335f2da27bc8_frame_014779/all/attention.npz"
+}

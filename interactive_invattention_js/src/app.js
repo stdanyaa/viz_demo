@@ -9,6 +9,7 @@ import { CameraView } from './components/CameraView.js';
 import { BEVView } from './components/BEVView.js';
 import { Controls } from './components/Controls.js';
 import { getDistinctColor } from './utils/colorUtils.js';
+import { DatasetFrameDock } from '../../shared/DatasetFrameDock.js';
 
 class App {
     constructor() {
@@ -16,7 +17,7 @@ class App {
         this.sceneData = null;
         this.selectedCamera = null;
         this.regionsByCamera = new Map(); // Map<cameraName, Array<region>>
-        this.totalRegionCount = 0; // Track total regions across all cameras for color assignment
+        this.nextRegionId = 1; // Monotonic global region id/color assignment
         this.aggregation = 'sum';
         this.headSelection = 'mean';
         
@@ -32,6 +33,10 @@ class App {
         this.bevView = null;
         this.controls = null;
         this.bevBaseImgEl = document.getElementById('bev-base-img');
+        this.userBevBaseOverride = '';
+        this.sceneBevBaseImage = '';
+        this.sceneBevBaseImages = {};
+        this.dock = null;
         
         // Setup event listeners
         this.setupEventListeners();
@@ -42,14 +47,33 @@ class App {
      * Pass null/empty to disable.
      */
     setBevBaseImage(src) {
-        if (!this.bevBaseImgEl) return;
-        if (!src) {
+        if (this.bevView && typeof this.bevView.setBaseImageUrl === 'function') {
+            this.bevView.setBaseImageUrl(src || '');
+        }
+        // Legacy DOM layer is kept in HTML, but rendering is now canvas-native
+        // to guarantee exact alignment with grid and overlays.
+        if (this.bevBaseImgEl) {
             this.bevBaseImgEl.src = '';
             this.bevBaseImgEl.classList.add('hidden');
+        }
+    }
+
+    setUserBevBaseOverride(src) {
+        this.userBevBaseOverride = src || '';
+        if (this.userBevBaseOverride) {
+            this.setBevBaseImage(this.userBevBaseOverride);
+        }
+    }
+
+    updateBevBaseImageForCurrentZoom() {
+        if (this.userBevBaseOverride) {
+            this.setBevBaseImage(this.userBevBaseOverride);
             return;
         }
-        this.bevBaseImgEl.src = src;
-        this.bevBaseImgEl.classList.remove('hidden');
+        const zoomSelect = document.getElementById('bev-zoom-select');
+        const zoomKey = zoomSelect ? String(parseInt(zoomSelect.value, 10)) : '';
+        const sceneSrc = (zoomKey && this.sceneBevBaseImages[zoomKey]) || this.sceneBevBaseImage || '';
+        this.setBevBaseImage(sceneSrc);
     }
     
     /**
@@ -91,20 +115,38 @@ class App {
             const sceneData = await loadSceneData(jsonPath);
             this.sceneData = sceneData;
             this.visualizer = sceneData.visualizer;
+            this.sceneBevBaseImage = sceneData.metadata?.bev_base_image || '';
+            this.sceneBevBaseImages = sceneData.metadata?.bev_base_images || {};
             
             // Initialize regions map and count existing regions
-            this.totalRegionCount = 0;
+            this.nextRegionId = 1;
+            let maxRegionId = 0;
             sceneData.imageNames.forEach(name => {
                 const existing = this.regionsByCamera.get(name) || [];
-                this.totalRegionCount += existing.length;
                 if (existing.length === 0) {
                     this.regionsByCamera.set(name, []);
+                    return;
                 }
+
+                existing.forEach(region => {
+                    const hasValidId = Number.isFinite(region?.id);
+                    if (!hasValidId) {
+                        region.id = this.nextRegionId++;
+                    }
+                    maxRegionId = Math.max(maxRegionId, region.id || 0);
+                    if (!region.color) {
+                        region.color = getDistinctColor((region.id || 1) - 1);
+                    }
+                });
             });
+            if (this.nextRegionId <= maxRegionId) {
+                this.nextRegionId = maxRegionId + 1;
+            }
             
             // Initialize components
             console.log('Initializing UI components...');
             this.initializeComponents(sceneData);
+            this.updateBevBaseImageForCurrentZoom();
             console.log('UI components initialized');
             
             // Select first camera (use display order)
@@ -207,6 +249,7 @@ class App {
             (meters) => {
                 if (!this.bevView) return;
                 this.bevView.setZoomMeters(meters);
+                this.updateBevBaseImageForCurrentZoom();
             }
         );
     }
@@ -285,14 +328,16 @@ class App {
         );
         
         if (!isDuplicate) {
-            // Assign color based on total region count (global across all cameras)
+            // Assign a global, monotonic region id + color.
+            if (!Number.isFinite(region?.id)) {
+                region.id = this.nextRegionId++;
+            }
             if (!region.color) {
-                region.color = getDistinctColor(this.totalRegionCount);
+                region.color = getDistinctColor((region.id || 1) - 1);
             }
             
             regions.push(region);
             this.regionsByCamera.set(camName, regions);
-            this.totalRegionCount++;
             
             // Update camera view to show the new region
             if (this.cameraView && this.selectedCamera === camName) {
@@ -321,7 +366,6 @@ class App {
         if (index >= 0 && index < regions.length) {
             regions.splice(index, 1);
             this.regionsByCamera.set(camName, regions);
-            this.totalRegionCount = Math.max(0, this.totalRegionCount - 1);
 
             // Update camera view to reflect the deletion
             if (this.cameraView && this.selectedCamera === camName) {
@@ -360,10 +404,11 @@ class App {
             const div = document.createElement('div');
             div.className = 'region-item';
             div.style.borderLeftColor = region.color;
+            const regionId = Number.isFinite(region?.id) ? region.id : (index + 1);
             
             const info = document.createElement('span');
             info.className = 'region-info';
-            info.textContent = `Region ${index + 1}`;
+            info.textContent = `Region ${regionId}`;
             
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'btn btn-small';
@@ -438,7 +483,8 @@ class App {
                     
                     // Ensure region has a color
                     if (!region.color) {
-                        region.color = getDistinctColor(allRegions.length);
+                        const fallbackId = Number.isFinite(region?.id) ? region.id : 1;
+                        region.color = getDistinctColor(fallbackId - 1);
                     }
                     
                     allRegions.push({
@@ -463,10 +509,7 @@ class App {
         if (!this.selectedCamera) return;
         
         const regions = this.regionsByCamera.get(this.selectedCamera) || [];
-        const removedCount = regions.length;
-        
         this.regionsByCamera.set(this.selectedCamera, []);
-        this.totalRegionCount = Math.max(0, this.totalRegionCount - removedCount);
         this.cameraView.clearRegions();
         this.updateRegionList();
         this.updateBEVView();
@@ -483,13 +526,9 @@ class App {
      * Clear all camera regions
      */
     clearAllCameras() {
-        let totalRemoved = 0;
         this.regionsByCamera.forEach((regions, camName) => {
-            totalRemoved += regions.length;
             this.regionsByCamera.set(camName, []);
         });
-        
-        this.totalRegionCount = 0;
         
         if (this.cameraView) {
             this.cameraView.clearRegions();
@@ -526,6 +565,10 @@ class App {
         if (this.mainContentEl) {
             this.mainContentEl.classList.remove('hidden');
         }
+        // Ensure BEV canvas resizes after content becomes visible.
+        if (this.bevView && typeof this.bevView.resizeCanvas === 'function') {
+            requestAnimationFrame(() => this.bevView.resizeCanvas());
+        }
     }
     
     showError(message) {
@@ -545,18 +588,44 @@ class App {
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     const app = new App();
-    
-    // Load default scene (can be changed to load from URL parameter or file input)
     const defaultScene = 'data/scenes/scene_av2_(10, 23).json';
-    
-    // Check if scene path is provided in URL
     const urlParams = new URLSearchParams(window.location.search);
-    const scenePath = urlParams.get('scene') || defaultScene;
-    const bevBase = urlParams.get('bev_base') || '';
-    
-    app.loadScene(scenePath);
-    if (bevBase) app.setBevBaseImage(bevBase);
-    
-    // Make app globally available for debugging
-    window.app = app;
+
+    const dockContainer = document.getElementById('context-dock');
+    const initDock = async () => {
+        if (!dockContainer) return null;
+        try {
+            const dock = new DatasetFrameDock(dockContainer, { demoKey: 'attention' });
+            await dock.init();
+            return dock;
+        } catch (err) {
+            console.warn('Dataset dock init failed:', err);
+            return null;
+        }
+    };
+
+    (async () => {
+        app.dock = await initDock();
+
+        let scenePath = urlParams.get('scene');
+        if (scenePath) {
+            app.dock?.setSelectedBySceneUrl(scenePath);
+        } else {
+            const def = app.dock?.getDefaultSceneUrl?.() || null;
+            if (def) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('scene', def);
+                window.history.replaceState({}, '', url.toString());
+                scenePath = def;
+                app.dock?.setSelectedBySceneUrl(def);
+            } else {
+                scenePath = defaultScene;
+            }
+        }
+
+        const bevBase = urlParams.get('bev_base') || '';
+        if (bevBase) app.setUserBevBaseOverride(new URL(bevBase, window.location.href).toString());
+        app.loadScene(scenePath);
+        window.app = app;
+    })();
 });

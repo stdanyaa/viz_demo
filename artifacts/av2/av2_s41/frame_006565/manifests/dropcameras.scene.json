@@ -1,0 +1,40 @@
+{
+  "all_image": "../baked_occ/all.png",
+  "camera_overlay_map": {
+    "ring_front_center": "../baked_occ/only_ring_front_center.png",
+    "ring_front_left": "../baked_occ/only_ring_front_left.png",
+    "ring_front_right": "../baked_occ/only_ring_front_right.png",
+    "ring_rear_left": "../baked_occ/only_ring_rear_left.png",
+    "ring_rear_right": "../baked_occ/only_ring_rear_right.png",
+    "ring_side_left": "../baked_occ/only_ring_side_left.png",
+    "ring_side_right": "../baked_occ/only_ring_side_right.png"
+  },
+  "camera_meta_file": "../meta/cameras.json",
+  "camera_order": [
+    "ring_front_center",
+    "ring_front_left",
+    "ring_front_right",
+    "ring_rear_left",
+    "ring_rear_right",
+    "ring_side_left",
+    "ring_side_right"
+  ],
+  "camera_images": {
+    "ring_front_center": "../images/ring_front_center.jpg",
+    "ring_front_left": "../images/ring_front_left.jpg",
+    "ring_front_right": "../images/ring_front_right.jpg",
+    "ring_rear_left": "../images/ring_rear_left.jpg",
+    "ring_rear_right": "../images/ring_rear_right.jpg",
+    "ring_side_left": "../images/ring_side_left.jpg",
+    "ring_side_right": "../images/ring_side_right.jpg"
+  },
+  "camera_thumb_images": {
+    "ring_front_center": "../images/ring_front_center.jpg",
+    "ring_front_left": "../images/ring_front_left.jpg",
+    "ring_front_right": "../images/ring_front_right.jpg",
+    "ring_rear_left": "../images/ring_rear_left.jpg",
+    "ring_rear_right": "../images/ring_rear_right.jpg",
+    "ring_side_left": "../images/ring_side_left.jpg",
+    "ring_side_right": "../images/ring_side_right.jpg"
+  }
+}

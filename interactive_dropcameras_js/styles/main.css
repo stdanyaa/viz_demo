@@ -63,9 +63,8 @@ body {
   align-content: start;
   gap: 10px;
   padding: 12px;
-  /* Prevent the UI from getting comically wide in large iframes. */
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
 }
 
 .cameraStrip {
@@ -156,8 +155,7 @@ body {
   }
 
   .panel {
-    max-width: 720px;
-    margin: 0 auto;
+    width: 100%;
   }
 }
 

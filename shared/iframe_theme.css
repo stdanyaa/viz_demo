@@ -158,6 +158,117 @@ code {
   border-color: var(--border);
 }
 
+/* Dataset frame dock (shared selector) */
+.context-dock {
+  margin-bottom: 10px;
+}
+
+.dataset-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.dataset-dock__datasets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dataset-dock__chip {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-primary);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.dataset-dock__chip.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.dataset-dock__film {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dataset-dock__nav {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.dataset-dock__nav:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.dataset-dock__strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  align-items: center;
+  flex: 1;
+  scroll-behavior: smooth;
+}
+
+.dataset-dock__tile {
+  width: 96px;
+  height: 64px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  flex: 0 0 auto;
+  padding: 0;
+}
+
+.dataset-dock__tile.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+}
+
+.dataset-dock__thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dataset-dock__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.04), rgba(17, 24, 39, 0.08));
+  text-align: center;
+  padding: 4px;
+}
+
+.dataset-dock__label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
 .cameraButton {
   background: #ffffff;
   border-color: var(--border);
@@ -166,4 +277,3 @@ code {
 .cameraButton:hover {
   background: var(--bg-tertiary);
 }
-

@@ -17,6 +17,7 @@
         
         <div id="main-content" class="hidden">
             <div class="main-layout">
+                <div id="context-dock" class="context-dock"></div>
                 <!-- Top: Camera strip -->
                 <section id="camera-strip-view" class="camera-strip-view">
                     <h2>Camera strip</h2>
@@ -38,18 +39,6 @@
                                     <option value="80">80×80m</option>
                                     <option value="40" selected>40×40m</option>
                                     <option value="20">20×20m</option>
-                                </select>
-                            </label>
-                            <label>
-                                Overlay alpha:
-                                <input id="alpha-slider" type="range" min="0" max="1" step="0.05" value="0.6">
-                                <span id="alpha-value">0.60</span>
-                            </label>
-                            <label>
-                                Color scheme:
-                                <select id="colorscheme-select">
-                                    <option value="red">Red (transparent low)</option>
-                                    <option value="hsv">HSV (blue→red)</option>
                                 </select>
                             </label>
                         </div>
@@ -75,7 +64,7 @@
         </div>
     </div>
     
-    <script type="module" src="src/app.js?v=2026-01-26-forward-infinite-v1"></script>
+    <script type="module" src="src/app.js?v=2026-02-08-forward-dock-v1"></script>
     <script type="module" src="../shared/iframe_autoheight.js"></script>
 </body>
 </html>

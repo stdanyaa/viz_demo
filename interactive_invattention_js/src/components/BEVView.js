@@ -25,6 +25,9 @@ export class BEVView {
             gridSize: this.gridSize,
             viewWindow: this.viewWindow
         });
+        this.baseImage = null;
+        this.baseImageUrl = '';
+        this.baseImageLoadToken = 0;
         this.lidarPts = null;
         this.regions = []; // Array of {bevMap, color, alpha}
         
@@ -44,6 +47,33 @@ export class BEVView {
         this.canvas.width = size;
         this.canvas.height = size;
         this.render();
+    }
+
+    setBaseImageUrl(url) {
+        const next = url || '';
+        if (next === this.baseImageUrl) return;
+        this.baseImageUrl = next;
+        this.baseImage = null;
+
+        if (!next) {
+            this.render();
+            return;
+        }
+
+        const token = ++this.baseImageLoadToken;
+        const img = new Image();
+        img.onload = () => {
+            if (token !== this.baseImageLoadToken) return;
+            this.baseImage = img;
+            this.render();
+        };
+        img.onerror = (err) => {
+            if (token !== this.baseImageLoadToken) return;
+            console.warn('Failed to load BEV base image:', next, err);
+            this.baseImage = null;
+            this.render();
+        };
+        img.src = next;
     }
     
     /**
@@ -85,6 +115,10 @@ export class BEVView {
      */
     render() {
         this.renderer.clear();
+
+        if (this.baseImage) {
+            this.renderer.renderBaseImage(this.baseImage, 1.0);
+        }
         
         // Render LiDAR points first (background)
         if (this.lidarPts && this.lidarPts.length > 0) {

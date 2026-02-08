@@ -1,0 +1,64 @@
+{
+  "image_names": [
+    "ring_front_center",
+    "ring_front_left",
+    "ring_front_right",
+    "ring_rear_left",
+    "ring_rear_right",
+    "ring_side_left",
+    "ring_side_right"
+  ],
+  "image_files": [
+    "../images/ring_front_center__scaled.jpg",
+    "../images/ring_front_left__scaled.jpg",
+    "../images/ring_front_right__scaled.jpg",
+    "../images/ring_rear_left__scaled.jpg",
+    "../images/ring_rear_right__scaled.jpg",
+    "../images/ring_side_left__scaled.jpg",
+    "../images/ring_side_right__scaled.jpg"
+  ],
+  "original_image_files": [
+    "../images/ring_front_center.jpg",
+    "../images/ring_front_left.jpg",
+    "../images/ring_front_right.jpg",
+    "../images/ring_rear_left.jpg",
+    "../images/ring_rear_right.jpg",
+    "../images/ring_side_left.jpg",
+    "../images/ring_side_right.jpg"
+  ],
+  "attn_weights_file": "../attention/attention.bin",
+  "attn_weights_shape": [
+    1,
+    8,
+    1024,
+    1645
+  ],
+  "lidar_pts": null,
+  "metadata": {
+    "grid_size": 32,
+    "patch_size": 14,
+    "bev_range": [
+      -40.0,
+      40.0,
+      -40.0,
+      40.0
+    ],
+    "has_cls_tokens": true,
+    "image_format": "files",
+    "image_display_order": [
+      "ring_front_center",
+      "ring_front_left",
+      "ring_front_right",
+      "ring_rear_left",
+      "ring_rear_right",
+      "ring_side_left",
+      "ring_side_right"
+    ],
+    "bev_base_images": {
+      "80": "../images/bev_gt_80m.jpg",
+      "40": "../images/bev_gt_40m.jpg",
+      "20": "../images/bev_gt_20m.jpg"
+    },
+    "bev_base_image": "../images/bev_gt_80m.jpg"
+  }
+}

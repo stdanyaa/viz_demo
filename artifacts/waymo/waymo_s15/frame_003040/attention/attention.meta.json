@@ -1,0 +1,22 @@
+{
+  "attn_weights_file": "attention.bin",
+  "attn_weights_shape": [
+    1,
+    8,
+    1024,
+    1539
+  ],
+  "dtype": "float32",
+  "camera_names": [
+    "FRONT",
+    "FRONT_LEFT",
+    "FRONT_RIGHT",
+    "LEFT",
+    "RIGHT"
+  ],
+  "n_heads": 8,
+  "n_queries": 1024,
+  "grid_size": 32,
+  "has_cls_tokens": true,
+  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_waymo_snatch_test_8993680275027614595_2520_000_2540_000_frame_003040/all/attention.npz"
+}

@@ -6,6 +6,7 @@
 import { loadSceneData } from './dataLoader.js';
 import { BEVView } from './components/BEVView.js';
 import { CameraStrip } from './components/CameraStrip.js';
+import { DatasetFrameDock } from '../../shared/DatasetFrameDock.js';
 
 class App {
     constructor() {
@@ -31,6 +32,10 @@ class App {
         this.alphaValueEl = document.getElementById('alpha-value');
         this.colorSchemeEl = document.getElementById('colorscheme-select');
         this.bevBaseImgEl = document.getElementById('bev-base-img');
+        this.userBevBaseOverride = '';
+        this.sceneBevBaseImage = '';
+        this.sceneBevBaseImages = {};
+        this.dock = null;
         
         // Components
         this.bevView = null;
@@ -74,6 +79,7 @@ class App {
                 const meters = parseInt(e.target.value, 10);
                 if (!this.bevView || !Number.isFinite(meters)) return;
                 this.bevView.setZoomMeters(meters);
+                this.updateBevBaseImageForCurrentZoom();
             });
         }
     }
@@ -83,14 +89,36 @@ class App {
      * Pass null/empty to disable.
      */
     setBevBaseImage(src) {
-        if (!this.bevBaseImgEl) return;
-        if (!src) {
+        if (this.bevView && typeof this.bevView.setBaseImageUrl === 'function') {
+            this.bevView.setBaseImageUrl(src || '');
+        }
+        // Legacy DOM layer is kept in HTML, but rendering is now canvas-native
+        // to guarantee exact alignment with grid and overlays.
+        if (this.bevBaseImgEl) {
             this.bevBaseImgEl.src = '';
             this.bevBaseImgEl.classList.add('hidden');
+        }
+    }
+
+    setUserBevBaseOverride(src) {
+        this.userBevBaseOverride = src || '';
+        if (this.userBevBaseOverride) {
+            this.setBevBaseImage(this.userBevBaseOverride);
+        }
+    }
+
+    updateBevBaseImageForCurrentZoom() {
+        if (this.userBevBaseOverride) {
+            this.setBevBaseImage(this.userBevBaseOverride);
             return;
         }
-        this.bevBaseImgEl.src = src;
-        this.bevBaseImgEl.classList.remove('hidden');
+
+        let zoomKey = '';
+        if (this.bevZoomSelectEl) {
+            zoomKey = String(parseInt(this.bevZoomSelectEl.value, 10));
+        }
+        const sceneSrc = (zoomKey && this.sceneBevBaseImages[zoomKey]) || this.sceneBevBaseImage || '';
+        this.setBevBaseImage(sceneSrc);
     }
     
     populateHeadOptions() {
@@ -119,8 +147,11 @@ class App {
             const sceneData = await loadSceneData(jsonPath);
             this.sceneData = sceneData;
             this.visualizer = sceneData.visualizer;
+            this.sceneBevBaseImage = sceneData.metadata?.bev_base_image || '';
+            this.sceneBevBaseImages = sceneData.metadata?.bev_base_images || {};
             
             this.initializeComponents(sceneData);
+            this.updateBevBaseImageForCurrentZoom();
             this.populateHeadOptions();
             
             this.hideLoading();
@@ -223,16 +254,39 @@ class App {
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = new App();
-    
-    // Default: load scene from this app's own data/ directory
     const defaultScene = 'data/scenes/scene_av2_(10, 23).json';
-    
     const urlParams = new URLSearchParams(window.location.search);
-    const scenePath = urlParams.get('scene') || defaultScene;
-    const bevBase = urlParams.get('bev_base') || '';
-    
-    app.loadScene(scenePath);
-    if (bevBase) app.setBevBaseImage(bevBase);
-    window.app = app;
-});
 
+    const dockContainer = document.getElementById('context-dock');
+    const initDock = async () => {
+        if (!dockContainer) return null;
+        const dock = new DatasetFrameDock(dockContainer, { demoKey: 'attention' });
+        await dock.init();
+        return dock;
+    };
+
+    (async () => {
+        app.dock = await initDock();
+
+        let scenePath = urlParams.get('scene');
+        if (scenePath) {
+            app.dock?.setSelectedBySceneUrl(scenePath);
+        } else {
+            const def = app.dock?.getDefaultSceneUrl?.() || null;
+            if (def) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('scene', def);
+                window.history.replaceState({}, '', url.toString());
+                scenePath = def;
+                app.dock?.setSelectedBySceneUrl(def);
+            } else {
+                scenePath = defaultScene;
+            }
+        }
+
+        const bevBase = urlParams.get('bev_base') || '';
+        if (bevBase) app.setUserBevBaseOverride(new URL(bevBase, window.location.href).toString());
+        app.loadScene(scenePath);
+        window.app = app;
+    })();
+});

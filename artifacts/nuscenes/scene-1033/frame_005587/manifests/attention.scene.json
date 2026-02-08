@@ -1,0 +1,60 @@
+{
+  "image_names": [
+    "CAM_BACK",
+    "CAM_BACK_LEFT",
+    "CAM_BACK_RIGHT",
+    "CAM_FRONT",
+    "CAM_FRONT_LEFT",
+    "CAM_FRONT_RIGHT"
+  ],
+  "image_files": [
+    "../images/CAM_BACK__scaled.jpg",
+    "../images/CAM_BACK_LEFT__scaled.jpg",
+    "../images/CAM_BACK_RIGHT__scaled.jpg",
+    "../images/CAM_FRONT__scaled.jpg",
+    "../images/CAM_FRONT_LEFT__scaled.jpg",
+    "../images/CAM_FRONT_RIGHT__scaled.jpg"
+  ],
+  "original_image_files": [
+    "../images/CAM_BACK.jpg",
+    "../images/CAM_BACK_LEFT.jpg",
+    "../images/CAM_BACK_RIGHT.jpg",
+    "../images/CAM_FRONT.jpg",
+    "../images/CAM_FRONT_LEFT.jpg",
+    "../images/CAM_FRONT_RIGHT.jpg"
+  ],
+  "attn_weights_file": "../attention/attention.bin",
+  "attn_weights_shape": [
+    1,
+    8,
+    1024,
+    1878
+  ],
+  "lidar_pts": null,
+  "metadata": {
+    "grid_size": 32,
+    "patch_size": 14,
+    "bev_range": [
+      -40.0,
+      40.0,
+      -40.0,
+      40.0
+    ],
+    "has_cls_tokens": true,
+    "image_format": "files",
+    "image_display_order": [
+      "CAM_BACK",
+      "CAM_BACK_LEFT",
+      "CAM_BACK_RIGHT",
+      "CAM_FRONT",
+      "CAM_FRONT_LEFT",
+      "CAM_FRONT_RIGHT"
+    ],
+    "bev_base_images": {
+      "80": "../images/bev_gt_80m.jpg",
+      "40": "../images/bev_gt_40m.jpg",
+      "20": "../images/bev_gt_20m.jpg"
+    },
+    "bev_base_image": "../images/bev_gt_80m.jpg"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "all_image": "../baked_occ/all.png",
+  "camera_overlay_map": {
+    "cam01": "../baked_occ/only_cam01.png",
+    "cam05": "../baked_occ/only_cam05.png",
+    "cam06": "../baked_occ/only_cam06.png",
+    "cam07": "../baked_occ/only_cam07.png",
+    "cam08": "../baked_occ/only_cam08.png",
+    "cam09": "../baked_occ/only_cam09.png"
+  },
+  "camera_meta_file": "../meta/cameras.json",
+  "camera_order": [
+    "cam01",
+    "cam05",
+    "cam06",
+    "cam07",
+    "cam08",
+    "cam09"
+  ],
+  "camera_images": {
+    "cam01": "../images/cam01.jpg",
+    "cam05": "../images/cam05.jpg",
+    "cam06": "../images/cam06.jpg",
+    "cam07": "../images/cam07.jpg",
+    "cam08": "../images/cam08.jpg",
+    "cam09": "../images/cam09.jpg"
+  },
+  "camera_thumb_images": {
+    "cam01": "../images/cam01.jpg",
+    "cam05": "../images/cam05.jpg",
+    "cam06": "../images/cam06.jpg",
+    "cam07": "../images/cam07.jpg",
+    "cam08": "../images/cam08.jpg",
+    "cam09": "../images/cam09.jpg"
+  }
+}

@@ -146,6 +146,22 @@ export class BEVFrameRenderer {
     this.ctx.restore();
   }
 
+  /**
+   * Draw a pre-rendered BEV base image to exactly the same pixel space
+   * used by overlays and grid.
+   *
+   * @param {HTMLImageElement|ImageBitmap|HTMLCanvasElement} image
+   * @param {number} [alpha=1]
+   */
+  renderBaseImage(image, alpha = 1) {
+    if (!image) return;
+    this.ctx.save();
+    this.ctx.globalAlpha = alpha;
+    this.ctx.imageSmoothingEnabled = true;
+    this.ctx.drawImage(image, 0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.restore();
+  }
+
   renderLidarPoints(lidarPts, color = 'grey', alpha = 0.1, pointSize = 1) {
     if (!lidarPts || lidarPts.length === 0) return;
 
@@ -239,7 +255,7 @@ export class BEVFrameRenderer {
     this.ctx.restore();
   }
 
-  renderSelectedCell(xIdx, yIdx, color = '#4a9eff') {
+  renderSelectedCell(xIdx, yIdx, color = '#ff2d2d') {
     if (xIdx === null || yIdx === null || xIdx === undefined || yIdx === undefined) return;
 
     const winW = this.viewWindow.x1 - this.viewWindow.x0;
@@ -359,4 +375,3 @@ export class BEVFrameRenderer {
     this.ctx.restore();
   }
 }
-

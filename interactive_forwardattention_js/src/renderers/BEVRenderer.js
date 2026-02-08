@@ -92,7 +92,7 @@ export class BEVRenderer {
         this.ctx.restore();
     }
     
-    renderSelectedCell(xIdx, yIdx, color = '#4a9eff') {
+    renderSelectedCell(xIdx, yIdx, color = '#ff2d2d') {
         if (xIdx === null || yIdx === null) return;
         
         const gridSize = this.gridSize;
@@ -105,15 +105,14 @@ export class BEVRenderer {
         
         this.ctx.save();
         this.ctx.strokeStyle = color;
-        this.ctx.lineWidth = 3;
-        this.ctx.globalAlpha = 0.9;
+        this.ctx.lineWidth = 4;
+        this.ctx.globalAlpha = 0.95;
         this.ctx.strokeRect(plotX + 1, plotY + 1, cellWidth - 2, cellHeight - 2);
         
-        // subtle fill
-        this.ctx.globalAlpha = 0.12;
+        // semi-transparent fill
+        this.ctx.globalAlpha = 0.24;
         this.ctx.fillStyle = color;
         this.ctx.fillRect(plotX, plotY, cellWidth, cellHeight);
         this.ctx.restore();
     }
 }
-

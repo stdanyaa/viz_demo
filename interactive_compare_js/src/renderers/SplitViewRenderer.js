@@ -8,6 +8,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 import { turboColormap, normalizeHeight } from '../utils/turboColormap.js';
 
+const FLIP_LEFT_RIGHT = true;
+
 function sizeCanvasRenderer(renderer, canvas) {
   const rect = canvas.getBoundingClientRect();
   const wCss = Math.max(1, Math.floor(rect.width));
@@ -21,6 +23,9 @@ function visualizeOccupancyWithCubes(occupancy, gridShape, bounds, threshold = 0
   const [xMin, xMax] = bounds.x;
   const [yMin, yMax] = bounds.y;
   const [zMin, zMax] = bounds.z;
+
+  const zFilterMin = -1.0;
+  const zFilterMax = 3.5;
 
   const voxelSizeX = (xMax - xMin) / nx;
   const voxelSizeY = (yMax - yMin) / ny;
@@ -38,7 +43,7 @@ function visualizeOccupancyWithCubes(occupancy, gridShape, bounds, threshold = 0
         if (p <= threshold) continue;
 
         const worldZ = zMin + (z + 0.5) * voxelSizeZ;
-        if (worldZ < -1.0 || worldZ > 2.5) continue;
+        if (worldZ < zFilterMin || worldZ > zFilterMax) continue;
 
         const zBin = Math.floor(worldZ / binSize);
         let arr = voxelsByZBin.get(zBin);
@@ -60,7 +65,7 @@ function visualizeOccupancyWithCubes(occupancy, gridShape, bounds, threshold = 0
     if (!cubeCount) return;
 
     const avgWorldZ = voxels[0].worldZ;
-    const t = Math.max(0, Math.min(1, (avgWorldZ - (-1.0)) / (2.5 - (-1.0))));
+    const t = Math.max(0, Math.min(1, (avgWorldZ - zFilterMin) / (zFilterMax - zFilterMin)));
     const [r, g, b] = turboColormap(t);
 
     const material = new THREE.MeshBasicMaterial({
@@ -119,7 +124,11 @@ function buildPointCloud(points, count, bounds) {
     opacity: 0.95,
   });
 
-  return new THREE.Points(geometry, material);
+  const pts = new THREE.Points(geometry, material);
+  if (FLIP_LEFT_RIGHT) {
+    pts.scale.x = -1;
+  }
+  return pts;
 }
 
 export class SplitViewRenderer {
@@ -225,6 +234,9 @@ export class SplitViewRenderer {
       this.occ.bounds,
       0.01
     );
+    if (FLIP_LEFT_RIGHT) {
+      occGroup.scale.x = -1;
+    }
     this.sceneOcc.add(occGroup);
 
     const pcObj = buildPointCloud(this.pc.points, this.pc.count, this.pc.bounds);
@@ -344,4 +356,3 @@ export class SplitViewRenderer {
     this.rendererRight.render(this.scenePc, this.cameraRight);
   }
 }
-

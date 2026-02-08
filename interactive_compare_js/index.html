@@ -38,7 +38,7 @@
       height: 100vh;
       display: grid;
       /* Keep 3D canvases stable: top row has a floor. */
-      grid-template-rows: minmax(210px, 34vh) 1fr;
+      grid-template-rows: minmax(360px, 55vh) 1fr;
     }
     #main.hidden { display: none; }
 
@@ -46,7 +46,9 @@
     #top-pane {
       border-bottom: 1px solid rgba(255,255,255,0.08);
       background: rgba(0,0,0,0.35);
-      display: block;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       padding: 10px 12px;
       /* Keep strip paints/layout self-contained (helps iframe stability). */
       contain: layout paint;
@@ -107,6 +109,8 @@
       color: rgba(255,255,255,0.65);
       white-space: nowrap;
     }
+    /* Hide legacy top controls (use URL params / defaults instead). */
+    #controls-bar { display: none; }
 
     #thumb-strip {
       display: flex;
@@ -114,8 +118,9 @@
       overflow-x: auto;
       padding: 6px 0;
       background: rgba(0,0,0,0.25);
-      height: 100%;
       align-items: center;
+      flex: 1 1 auto;
+      min-height: 210px;
     }
     .thumb {
       flex: 0 0 auto;
@@ -252,12 +257,13 @@
 
   <div id="main" class="hidden">
     <section id="top-pane">
+      <div id="context-dock" class="context-dock"></div>
       <div id="controls-bar" aria-label="Compare controls">
         <div class="controls-left">
           <label for="pane-mode">Panes</label>
           <select id="pane-mode">
             <option value="2">2</option>
-            <option value="3">3</option>
+            <option value="3" selected>3</option>
           </select>
           <a id="reset-view" href="#" aria-label="Reset view">Reset</a>
         </div>
@@ -295,7 +301,7 @@
   </script>
 
   <!-- Cache-bust (strip-only + infinite wrap) -->
-  <script type="module" src="src/app.js?v=2026-01-26-compare-strip-infinite-v3"></script>
+  <script type="module" src="src/app.js?v=2026-02-08-compare-dock-v1"></script>
   <script type="module" src="../shared/iframe_autoheight.js"></script>
 </body>
 </html>

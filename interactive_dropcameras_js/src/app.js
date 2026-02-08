@@ -7,9 +7,10 @@ import {
   hitTestWedges,
 } from "./frustums.js";
 import { InfiniteStrip } from "../../shared/InfiniteStrip.js";
+import { DatasetFrameDock } from "../../shared/DatasetFrameDock.js";
 
 // Keep the demo self-contained under this app's folder (GH Pages-friendly).
-const SCENE_DIR = "data/drop_scenes/av2_(10,23)";
+const DEFAULT_SCENE_DIR = "data/drop_scenes/av2_(10,23)";
 
 function $(id) {
   const el = document.getElementById(id);
@@ -25,6 +26,50 @@ async function fetchJson(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status} ${res.statusText}`);
   return await res.json();
+}
+
+function resolveUrl(pathOrUrl, baseUrl) {
+  if (!pathOrUrl) return null;
+  return new URL(pathOrUrl, baseUrl).toString();
+}
+
+function normalizeMetaForFrustums(meta) {
+  const out = { ...(meta || {}) };
+  const cameras = out.cameras || {};
+  const normalized = {};
+
+  for (const [cam, pose] of Object.entries(cameras)) {
+    if (!pose || typeof pose !== "object") continue;
+    const t = pose.t || pose.translation || pose.sensor2ego_translation;
+    const q =
+      pose.q ||
+      pose.quaternion_wxyz ||
+      pose.sensor2ego_quaternion_wxyz ||
+      pose.quaternion;
+    let fov = pose.fov;
+    if (!Number.isFinite(fov)) fov = pose.fovx_rad;
+    if (!Number.isFinite(fov) && Number.isFinite(pose.fovx_deg)) fov = (pose.fovx_deg * Math.PI) / 180;
+
+    if (
+      Array.isArray(t) &&
+      t.length >= 2 &&
+      Array.isArray(q) &&
+      q.length === 4 &&
+      Number.isFinite(fov)
+    ) {
+      normalized[cam] = { t, q, fov };
+    }
+  }
+
+  out.cameras = normalized;
+  if (!Array.isArray(out.viz_camera_order) || out.viz_camera_order.length === 0) {
+    out.viz_camera_order = Object.keys(normalized);
+  }
+  if (!Array.isArray(out.camera_order) || out.camera_order.length === 0) {
+    out.camera_order = Object.keys(normalized);
+  }
+  if (!out.quat_convention) out.quat_convention = "wxyz";
+  return out;
 }
 
 function setCanvasToDisplaySize(canvas) {
@@ -89,17 +134,34 @@ class DropCamerasApp {
     this._rectSelected = null;
 
     this._resizeObserver = null;
+
+    this.sceneConfig = {
+      sceneDir: DEFAULT_SCENE_DIR,
+      allImage: null,
+      cameraMetaFile: null,
+      cameraImages: {},
+      cameraThumbImages: {},
+      cameraOverlayMap: {},
+      cameraOrder: null,
+    };
+    this.dock = null;
   }
 
   async init() {
+    await this._loadSceneConfigFromUrl();
+
     // Images
-    this.imgAll.src = `${SCENE_DIR}/all.jpg`;
+    this.imgAll.src = this.sceneConfig.allImage || `${this.sceneConfig.sceneDir}/all.jpg`;
 
     // Metadata: generated from metadata.npz.npy by python script
-    const metaUrl = `${SCENE_DIR}/metadata.json`;
-    this.meta = await fetchJson(metaUrl);
+    const metaUrl = this.sceneConfig.cameraMetaFile || `${this.sceneConfig.sceneDir}/metadata.json`;
+    this.meta = normalizeMetaForFrustums(await fetchJson(metaUrl));
 
-    this.cams = Array.isArray(this.meta.viz_camera_order) ? this.meta.viz_camera_order : Object.keys(this.meta.cameras || {});
+    this.cams =
+      (Array.isArray(this.sceneConfig.cameraOrder) && this.sceneConfig.cameraOrder.length > 0
+        ? this.sceneConfig.cameraOrder
+        : null) ||
+      (Array.isArray(this.meta.viz_camera_order) ? this.meta.viz_camera_order : Object.keys(this.meta.cameras || {}));
     if (this.cams.length === 0) throw new Error("No cameras found in metadata.json");
 
     // Optional bounds override from metadata.json
@@ -153,7 +215,7 @@ class DropCamerasApp {
   _initCameraStrip() {
     const items = this.cams.map((cam) => ({
       key: cam,
-      src: `${SCENE_DIR}/${cam}_cam.jpg`,
+      src: this._cameraThumbSrc(cam),
       label: prettyCamName(cam),
     }));
 
@@ -203,8 +265,55 @@ class DropCamerasApp {
   }
 
   _applySelection() {
-    this.imgSelected.src = `${SCENE_DIR}/${this.selectedCam}.jpg`;
+    const overlay = this.sceneConfig.cameraOverlayMap?.[this.selectedCam];
+    this.imgSelected.src = overlay || this._cameraImageSrc(this.selectedCam);
     this.selectedLabel.textContent = prettyCamName(this.selectedCam);
+  }
+
+  _cameraImageSrc(cam) {
+    return this.sceneConfig.cameraImages?.[cam] || `${this.sceneConfig.sceneDir}/${cam}.jpg`;
+  }
+
+  _cameraThumbSrc(cam) {
+    return (
+      this.sceneConfig.cameraThumbImages?.[cam] ||
+      this.sceneConfig.cameraImages?.[cam] ||
+      `${this.sceneConfig.sceneDir}/${cam}_cam.jpg`
+    );
+  }
+
+  async _loadSceneConfigFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const sceneManifestPath = params.get("scene");
+    if (!sceneManifestPath) return;
+
+    const manifestUrl = new URL(sceneManifestPath, window.location.href);
+    const scene = await fetchJson(manifestUrl.toString());
+
+    const resolvedCameraImages = {};
+    for (const [cam, p] of Object.entries(scene.camera_images || {})) {
+      resolvedCameraImages[cam] = resolveUrl(p, manifestUrl);
+    }
+
+    const resolvedThumbImages = {};
+    for (const [cam, p] of Object.entries(scene.camera_thumb_images || {})) {
+      resolvedThumbImages[cam] = resolveUrl(p, manifestUrl);
+    }
+
+    const resolvedOverlayMap = {};
+    for (const [cam, p] of Object.entries(scene.camera_overlay_map || {})) {
+      resolvedOverlayMap[cam] = resolveUrl(p, manifestUrl);
+    }
+
+    this.sceneConfig = {
+      sceneDir: DEFAULT_SCENE_DIR,
+      allImage: resolveUrl(scene.all_image, manifestUrl),
+      cameraMetaFile: resolveUrl(scene.camera_meta_file, manifestUrl),
+      cameraImages: resolvedCameraImages,
+      cameraThumbImages: resolvedThumbImages,
+      cameraOverlayMap: resolvedOverlayMap,
+      cameraOrder: Array.isArray(scene.camera_order) ? scene.camera_order : null,
+    };
   }
 
   _onOverlayClick(ev, canvas, wedges, rect) {
@@ -292,6 +401,27 @@ class DropCamerasApp {
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     const app = new DropCamerasApp();
+    const dockContainer = document.getElementById("context-dock");
+    if (dockContainer) {
+      app.dock = new DatasetFrameDock(dockContainer, { demoKey: "dropcameras" });
+      await app.dock.init();
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let scenePath = urlParams.get("scene");
+    if (scenePath) {
+      app.dock?.setSelectedBySceneUrl(scenePath);
+    } else {
+      const def = app.dock?.getDefaultSceneUrl?.() || null;
+      if (def) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("scene", def);
+        window.history.replaceState({}, "", url.toString());
+        scenePath = def;
+        app.dock?.setSelectedBySceneUrl(def);
+      }
+    }
+
     await app.init();
     // Expose for quick debugging/tweaks in console:
     window.__dropcams = app;
@@ -305,4 +435,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.body.appendChild(div);
   }
 });
-

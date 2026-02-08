@@ -3,6 +3,7 @@
  */
 
 import { InverseAttentionVisualizer } from './inverseAttention.js';
+import { orderCameraNamesForUi } from '../../shared/cameraOrder.js';
 
 /**
  * Load base64 image string and convert to Image object
@@ -13,6 +14,15 @@ function loadBase64Image(base64String) {
         img.onload = () => resolve(img);
         img.onerror = reject;
         img.src = `data:image/png;base64,${base64String}`;
+    });
+}
+
+function loadImageFromUrl(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
     });
 }
 
@@ -27,8 +37,10 @@ export async function loadSceneData(jsonPath) {
         console.log(`Loading scene data from: ${jsonPath}`);
         console.log('This may take a while for large files...');
         
+        const jsonUrl = new URL(jsonPath, window.location.href);
+
         // Fetch JSON file
-        const response = await fetch(jsonPath);
+        const response = await fetch(jsonUrl);
         if (!response.ok) {
             throw new Error(`Failed to load scene: ${response.statusText}`);
         }
@@ -67,6 +79,24 @@ export async function loadSceneData(jsonPath) {
         
         // Extract metadata
         const metadata = data.metadata || {};
+        const resolveBevBase = (src) => {
+            if (!src) return '';
+            try {
+                return new URL(src, jsonUrl).toString();
+            } catch (err) {
+                return src;
+            }
+        };
+        if (metadata.bev_base_image) {
+            metadata.bev_base_image = resolveBevBase(metadata.bev_base_image);
+        }
+        if (metadata.bev_base_images && typeof metadata.bev_base_images === 'object') {
+            const resolved = {};
+            Object.entries(metadata.bev_base_images).forEach(([key, value]) => {
+                if (value) resolved[key] = resolveBevBase(value);
+            });
+            metadata.bev_base_images = resolved;
+        }
         const gridSize = metadata.grid_size || 32;
         const patchSize = metadata.patch_size || 14;
         const bevRange = metadata.bev_range || [-40, 40, -40, 40];
@@ -76,7 +106,26 @@ export async function loadSceneData(jsonPath) {
         // Load images
         let cameraImages, originalImages;
         
-        if (imageFormat === 'base64') {
+        if (Array.isArray(data.image_files) && data.image_files.length > 0) {
+            console.log('Loading images from image_files...');
+            cameraImages = await Promise.all(
+                data.image_files.map((p, idx) => {
+                    console.log(`Loading scaled image ${idx + 1}/${data.image_files.length}`);
+                    return loadImageFromUrl(new URL(p, jsonUrl).toString());
+                })
+            );
+            if (Array.isArray(data.original_image_files) && data.original_image_files.length > 0) {
+                originalImages = await Promise.all(
+                    data.original_image_files.map((p, idx) => {
+                        console.log(`Loading original image ${idx + 1}/${data.original_image_files.length}`);
+                        return loadImageFromUrl(new URL(p, jsonUrl).toString());
+                    })
+                );
+            } else {
+                originalImages = cameraImages;
+            }
+            console.log('All images loaded');
+        } else if (imageFormat === 'base64') {
             console.log('Loading images from base64...');
             // Load base64 images
             cameraImages = await Promise.all(
@@ -109,7 +158,6 @@ export async function loadSceneData(jsonPath) {
             console.log(`  Loading from binary file: ${data.attn_weights_file}`);
             
             // Resolve relative to the JSON file location (handles URL encoding, query params, etc.)
-            const jsonUrl = new URL(jsonPath, window.location.href);
             const attnFileUrl = new URL(data.attn_weights_file, jsonUrl);
             console.log(`  Full path: ${attnFileUrl.toString()}`);
             
@@ -165,42 +213,23 @@ export async function loadSceneData(jsonPath) {
         
         console.log('Scene data loaded successfully!');
         
-        // Get custom display order if specified
-        // Fallback to hardcoded order for common camera names, then original order
-        let imageDisplayOrder = metadata.image_display_order;
-        
-        if (!imageDisplayOrder) {
-            // Hardcoded order for common camera names (can be customized)
-            const commonOrder = [
-                'FRONT',
-                'FRONT_LEFT',
-                'FRONT_RIGHT',
-                'BACK',
-                'BACK_LEFT',
-                'BACK_RIGHT',
-                'LEFT',
-                'RIGHT'
-            ];
-            
-            // Try to match camera names to common order
-            const ordered = [];
-            const unordered = [];
-            
-            // First, add cameras in common order
-            commonOrder.forEach(camName => {
-                if (data.image_names.includes(camName)) {
-                    ordered.push(camName);
-                }
-            });
-            
-            // Then add any remaining cameras in their original order
-            data.image_names.forEach(camName => {
-                if (!ordered.includes(camName)) {
-                    unordered.push(camName);
-                }
-            });
-            
-            imageDisplayOrder = ordered.length > 0 ? [...ordered, ...unordered] : data.image_names;
+        // Get custom display order if specified; otherwise use shared ordering helper.
+        const datasetHint = metadata.dataset || metadata.dataset_name || metadata.datasetName || null;
+        const helperOrder = orderCameraNamesForUi(data.image_names, datasetHint);
+        const helperReordered =
+            Array.isArray(helperOrder)
+            && helperOrder.length === data.image_names.length
+            && helperOrder.some((name, idx) => name !== data.image_names[idx]);
+
+        let imageDisplayOrder = null;
+        if (helperReordered) {
+            imageDisplayOrder = helperOrder;
+        } else if (Array.isArray(metadata.image_display_order) && metadata.image_display_order.length > 0) {
+            const baseOrder = metadata.image_display_order.filter((name) => data.image_names.includes(name));
+            const missing = data.image_names.filter((name) => !baseOrder.includes(name));
+            imageDisplayOrder = [...baseOrder, ...missing];
+        } else {
+            imageDisplayOrder = data.image_names;
         }
         
         return {

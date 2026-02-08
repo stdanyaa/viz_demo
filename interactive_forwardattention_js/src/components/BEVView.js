@@ -28,6 +28,9 @@ export class BEVView {
             gridSize: this.gridSize,
             viewWindow: this.viewWindow
         });
+        this.baseImage = null;
+        this.baseImageUrl = '';
+        this.baseImageLoadToken = 0;
         this.lidarPts = null;
         
         this.selected = null; // { xIdx, yIdx, queryIdx }
@@ -69,6 +72,33 @@ export class BEVView {
         this.renderer.setViewWindow(this.viewWindow);
         this.render();
     }
+
+    setBaseImageUrl(url) {
+        const next = url || '';
+        if (next === this.baseImageUrl) return;
+        this.baseImageUrl = next;
+        this.baseImage = null;
+
+        if (!next) {
+            this.render();
+            return;
+        }
+
+        const token = ++this.baseImageLoadToken;
+        const img = new Image();
+        img.onload = () => {
+            if (token !== this.baseImageLoadToken) return;
+            this.baseImage = img;
+            this.render();
+        };
+        img.onerror = (err) => {
+            if (token !== this.baseImageLoadToken) return;
+            console.warn('Failed to load BEV base image:', next, err);
+            this.baseImage = null;
+            this.render();
+        };
+        img.src = next;
+    }
     
     resizeCanvas() {
         const container = this.canvas.parentElement;
@@ -87,6 +117,10 @@ export class BEVView {
     
     render() {
         this.renderer.clear();
+
+        if (this.baseImage) {
+            this.renderer.renderBaseImage(this.baseImage, 1.0);
+        }
         
         if (this.lidarPts && this.lidarPts.length > 0) {
             // Make lidar points more visible
@@ -96,8 +130,7 @@ export class BEVView {
         this.renderer.renderGrid('white', 0.12);
         
         if (this.selected) {
-            this.renderer.renderSelectedCell(this.selected.xIdx, this.selected.yIdx, '#4a9eff');
+            this.renderer.renderSelectedCell(this.selected.xIdx, this.selected.yIdx, '#ff2d2d');
         }
     }
 }
-

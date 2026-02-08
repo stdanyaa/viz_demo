@@ -1,0 +1,56 @@
+{
+  "image_names": [
+    "FRONT",
+    "FRONT_LEFT",
+    "FRONT_RIGHT",
+    "LEFT",
+    "RIGHT"
+  ],
+  "image_files": [
+    "../images/FRONT__scaled.jpg",
+    "../images/FRONT_LEFT__scaled.jpg",
+    "../images/FRONT_RIGHT__scaled.jpg",
+    "../images/LEFT__scaled.jpg",
+    "../images/RIGHT__scaled.jpg"
+  ],
+  "original_image_files": [
+    "../images/FRONT.jpg",
+    "../images/FRONT_LEFT.jpg",
+    "../images/FRONT_RIGHT.jpg",
+    "../images/LEFT.jpg",
+    "../images/RIGHT.jpg"
+  ],
+  "attn_weights_file": "../attention/attention.bin",
+  "attn_weights_shape": [
+    1,
+    8,
+    1024,
+    1539
+  ],
+  "lidar_pts": null,
+  "metadata": {
+    "grid_size": 32,
+    "patch_size": 14,
+    "bev_range": [
+      -40.0,
+      40.0,
+      -40.0,
+      40.0
+    ],
+    "has_cls_tokens": true,
+    "image_format": "files",
+    "image_display_order": [
+      "FRONT",
+      "FRONT_LEFT",
+      "FRONT_RIGHT",
+      "LEFT",
+      "RIGHT"
+    ],
+    "bev_base_images": {
+      "80": "../images/bev_gt_80m.jpg",
+      "40": "../images/bev_gt_40m.jpg",
+      "20": "../images/bev_gt_20m.jpg"
+    },
+    "bev_base_image": "../images/bev_gt_80m.jpg"
+  }
+}

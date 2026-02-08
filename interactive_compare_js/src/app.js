@@ -8,6 +8,8 @@ import { loadCompareScene } from './sceneLoader.js';
 import { ImageStrip } from '../../shared/ImageStrip.js';
 import { loadPointCloudData } from './loaders/pointCloudLoader.js';
 import { CompareMultiViewRenderer } from './renderers/CompareMultiViewRenderer.js';
+import { DatasetFrameDock } from '../../shared/DatasetFrameDock.js';
+import { orderCameraItemsForUi } from '../../shared/cameraOrder.js';
 
 class App {
   static VERSION = '2026-01-23-compare-v2b-stabletop';
@@ -34,6 +36,7 @@ class App {
 
     this.strip = null;
     this.renderer = null;
+    this.dock = null;
 
     this.scene = null;
     this.pcOptions = [];
@@ -42,12 +45,39 @@ class App {
 
   async init() {
     const urlParams = new URLSearchParams(window.location.search);
-    const scenePath = urlParams.get('scene') || 'data/scenes/frame_000121/scene.json';
+    const dockContainer = document.getElementById('context-dock');
+    if (dockContainer) {
+      this.dock = new DatasetFrameDock(dockContainer, { demoKey: 'compare' });
+      await this.dock.init();
+    }
+
+    let scenePath = urlParams.get('scene');
+    if (scenePath) {
+      this.dock?.setSelectedBySceneUrl(scenePath);
+    } else {
+      const def = this.dock?.getDefaultSceneUrl?.() || null;
+      if (def) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('scene', def);
+        window.history.replaceState({}, '', url.toString());
+        scenePath = def;
+        this.dock?.setSelectedBySceneUrl(def);
+      } else {
+        scenePath = 'data/scenes/frame_000121/scene.json';
+      }
+    }
 
     try {
       console.log('Compare app version:', App.VERSION);
       this.showLoading();
       this.scene = await loadCompareScene(scenePath);
+      if (this.scene && Array.isArray(this.scene.images)) {
+        const datasetHint = this.scene?.manifest?.metadata?.dataset
+          || this.scene?.manifest?.metadata?.dataset_name
+          || this.scene?.manifest?.metadata?.datasetName
+          || null;
+        this.scene.images = orderCameraItemsForUi(this.scene.images, datasetHint);
+      }
 
       // IMPORTANT: reveal layout before initializing UI + WebGL.
       // If we init while #main is display:none, canvas/image strip measure as 0x0 until a resize.
@@ -247,4 +277,3 @@ class App {
 document.addEventListener('DOMContentLoaded', () => {
   new App().init();
 });
-

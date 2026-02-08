@@ -196,7 +196,7 @@ header p {
     max-width: 100%;
     height: auto;
     border-radius: 4px;
-    background: #000;
+    background: #fff;
     cursor: crosshair;
     position: relative;
     z-index: 1;

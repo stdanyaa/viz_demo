@@ -1,0 +1,32 @@
+{
+  "all_image": "../baked_occ/all.png",
+  "camera_overlay_map": {
+    "FRONT": "../baked_occ/only_FRONT.png",
+    "FRONT_LEFT": "../baked_occ/only_FRONT_LEFT.png",
+    "FRONT_RIGHT": "../baked_occ/only_FRONT_RIGHT.png",
+    "LEFT": "../baked_occ/only_LEFT.png",
+    "RIGHT": "../baked_occ/only_RIGHT.png"
+  },
+  "camera_meta_file": "../meta/cameras.json",
+  "camera_order": [
+    "FRONT",
+    "FRONT_LEFT",
+    "FRONT_RIGHT",
+    "LEFT",
+    "RIGHT"
+  ],
+  "camera_images": {
+    "FRONT": "../images/FRONT.jpg",
+    "FRONT_LEFT": "../images/FRONT_LEFT.jpg",
+    "FRONT_RIGHT": "../images/FRONT_RIGHT.jpg",
+    "LEFT": "../images/LEFT.jpg",
+    "RIGHT": "../images/RIGHT.jpg"
+  },
+  "camera_thumb_images": {
+    "FRONT": "../images/FRONT.jpg",
+    "FRONT_LEFT": "../images/FRONT_LEFT.jpg",
+    "FRONT_RIGHT": "../images/FRONT_RIGHT.jpg",
+    "LEFT": "../images/LEFT.jpg",
+    "RIGHT": "../images/RIGHT.jpg"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "attn_weights_file": "attention.bin",
+  "attn_weights_shape": [
+    1,
+    8,
+    1024,
+    1878
+  ],
+  "dtype": "float32",
+  "camera_names": [
+    "CAM_BACK",
+    "CAM_BACK_LEFT",
+    "CAM_BACK_RIGHT",
+    "CAM_FRONT",
+    "CAM_FRONT_LEFT",
+    "CAM_FRONT_RIGHT"
+  ],
+  "n_heads": 8,
+  "n_queries": 1024,
+  "grid_size": 32,
+  "has_cls_tokens": true,
+  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_nuscenes_snatch_scene-1033_frame_005587/all/attention.npz"
+}

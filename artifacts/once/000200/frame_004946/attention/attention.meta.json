@@ -1,0 +1,23 @@
+{
+  "attn_weights_file": "attention.bin",
+  "attn_weights_shape": [
+    1,
+    8,
+    1024,
+    1956
+  ],
+  "dtype": "float32",
+  "camera_names": [
+    "cam01",
+    "cam05",
+    "cam06",
+    "cam07",
+    "cam08",
+    "cam09"
+  ],
+  "n_heads": 8,
+  "n_queries": 1024,
+  "grid_size": 32,
+  "has_cls_tokens": true,
+  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_once_snatch_000200_frame_004946/all/attention.npz"
+}
