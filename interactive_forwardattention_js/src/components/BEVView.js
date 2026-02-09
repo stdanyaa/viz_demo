@@ -37,6 +37,11 @@ export class BEVView {
         
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
+        if ('ResizeObserver' in window) {
+            this._resizeObserver = new ResizeObserver(() => this.resizeCanvas());
+            const target = this.canvas.parentElement || this.container || this.canvas;
+            if (target) this._resizeObserver.observe(target);
+        }
         
         this.setupEventListeners();
     }
@@ -105,6 +110,7 @@ export class BEVView {
         // In compact iframe embeds, use more of the available width (but cap it).
         const maxSize = Math.min(container.clientWidth, 900);
         const size = Math.max(360, maxSize);
+        if (this.canvas.width === size && this.canvas.height === size) return;
         this.canvas.width = size;
         this.canvas.height = size;
         this.render();
