@@ -286,11 +286,15 @@
           <div class="container is-max-desktop">
             <div class="columns is-centered">
               <div class="column is-four-fifths">
-              <h3 class="title is-4">Compare: occupancy vs point cloud</h3>
+              <h3 class="title is-4">3D rendering</h3>
               <div class="content has-text-justified">
-                <p class="demo-subtitle">Side-by-side WebGL view with camera strip.</p>
+                <!-- <p class="demo-subtitle">Side-by-side WebGL view with camera strip.</p> -->
                 <!-- TODO(danya): write 2–4 sentences describing what this demo shows, how to interact, and what to look for. -->
-                <p><em>TODO: Add description text here.</em></p>
+                <p><em>Our occupancy model allows for arbitrary point querying within RoI bounds. 
+                In this demo we explore voxel grids (first frame) and point clouds (second frame) created with it by subsampling and ray-marching. 
+                Ground Truth LiDAR points and other models predictions provided for comparison (can be selected in 2/3 windows dropdown menus). 
+                You can fly over scene with mouse and WASD/arrows keys in voxel grid window.
+                </em></p>
               </div>
               <div class="demo-subsection__actions">
                 <a class="button is-small is-dark" target="_blank" rel="noopener"
@@ -315,11 +319,15 @@
           <div class="container is-max-desktop">
             <div class="columns is-centered">
               <div class="column is-four-fifths">
-              <h3 class="title is-4">Drop cameras</h3>
+              <h3 class="title is-4">Scene consistency with single camera input.</h3>
               <div class="content has-text-justified">
-                <p class="demo-subtitle">Click thumbnails / frustums to swap a camera subset.</p>
+                <!-- <p class="demo-subtitle">Click thumbnails / frustums to swap a camera subset.</p> -->
                 <!-- TODO(danya): write 2–4 sentences describing what this demo shows, how to interact, and what to look for. -->
-                <p><em>TODO: Add description text here.</em></p>
+                <p><em>
+                  In this demo we show occupancy produced by model (rendered with nerfacc from the top) with all cameras vs single camera available. 
+                  It shows that scene representation stays consistent within observable region. (Unobserved regions are dimmed).
+                  You can select input camera by clicking on frustums or camera images.
+                </em></p>
               </div>
               <div class="demo-subsection__actions">
                 <a class="button is-small is-dark" target="_blank" rel="noopener"
@@ -344,11 +352,14 @@
           <div class="container is-max-desktop">
             <div class="columns is-centered">
               <div class="column is-four-fifths">
-              <h3 class="title is-4">Forward attention</h3>
+              <h3 class="title is-4">BEV queries attention.</h3>
               <div class="content has-text-justified">
-                <p class="demo-subtitle">Click a BEV query to view attended camera patches.</p>
+                <!-- <p class="demo-subtitle">Click a BEV query to view attended camera patches.</p> -->
                 <!-- TODO(danya): write 2–4 sentences describing what this demo shows, how to interact, and what to look for. -->
-                <p><em>TODO: Add description text here.</em></p>
+                <p><em>
+                  This demo shows how model learns correspondence between (latent?) BEV query cells and desired image regions.
+                  You can click on BEV frame to select query cell and image patches will be highlighted according to attention intensity.
+                </em></p>
               </div>
               <div class="demo-subsection__actions">
                 <a class="button is-small is-dark" target="_blank" rel="noopener"
@@ -373,11 +384,15 @@
           <div class="container is-max-desktop">
             <div class="columns is-centered">
               <div class="column is-four-fifths">
-              <h3 class="title is-4">Inverse attention</h3>
+              <h3 class="title is-4">Image regions lookup.</h3>
               <div class="content has-text-justified">
-                <p class="demo-subtitle">Select camera regions to see which BEV queries attend to them.</p>
+                <!-- <p class="demo-subtitle">Select camera regions to see which BEV queries attend to them.</p> -->
                 <!-- TODO(danya): write 2–4 sentences describing what this demo shows, how to interact, and what to look for. -->
-                <p><em>TODO: Add description text here.</em></p>
+                <p><em>
+                  This demo shows Image-BEV learned correspondence from another angle. 
+                  Pick camera and select image regions (and, correspondingly, patches) and see which BEV queries attend to them by intensity highlight.
+                  Multiple regions can be selected on different cameras simultaneously.
+                </em></p>
               </div>
               <div class="demo-subsection__actions">
                 <a class="button is-small is-dark" target="_blank" rel="noopener"
