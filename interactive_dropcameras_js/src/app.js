@@ -8,6 +8,7 @@ import {
 } from "./frustums.js";
 import { InfiniteStrip } from "../../shared/InfiniteStrip.js";
 import { DatasetFrameDock } from "../../shared/DatasetFrameDock.js";
+import { detectCameraDataset, orderCameraNamesForUi } from "../../shared/cameraOrder.js";
 
 // Keep the demo self-contained under this app's folder (GH Pages-friendly).
 const DEFAULT_SCENE_DIR = "data/drop_scenes/av2_(10,23)";
@@ -162,6 +163,18 @@ class DropCamerasApp {
         ? this.sceneConfig.cameraOrder
         : null) ||
       (Array.isArray(this.meta.viz_camera_order) ? this.meta.viz_camera_order : Object.keys(this.meta.cameras || {}));
+
+    const datasetHint =
+      this.meta?.dataset || this.meta?.dataset_name || this.meta?.datasetName || detectCameraDataset(this.cams);
+    const helperOrder = orderCameraNamesForUi(this.cams, datasetHint);
+    const helperReordered =
+      Array.isArray(helperOrder) &&
+      helperOrder.length === this.cams.length &&
+      helperOrder.some((name, idx) => name !== this.cams[idx]);
+    if (helperReordered) {
+      this.cams = helperOrder;
+    }
+
     if (this.cams.length === 0) throw new Error("No cameras found in metadata.json");
 
     // Optional bounds override from metadata.json

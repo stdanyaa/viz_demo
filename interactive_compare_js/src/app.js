@@ -63,7 +63,7 @@ class App {
         scenePath = def;
         this.dock?.setSelectedBySceneUrl(def);
       } else {
-        scenePath = 'data/scenes/frame_000121/scene.json';
+        scenePath = '../artifacts/av2/av2_s01/frame_000121/manifests/compare.scene.json';
       }
     }
 
