@@ -65,6 +65,15 @@
                                         <option value="mean">Mean over heads</option>
                                     </select>
                                 </label>
+                                <label>
+                                    Precision:
+                                    <select id="attn-precision-select">
+                                        <option value="auto" selected>Auto</option>
+                                        <option value="int8">Int8</option>
+                                        <option value="int4">Int4</option>
+                                        <option value="fp32">FP32</option>
+                                    </select>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -86,7 +95,7 @@
         </div>
     </div>
     
-    <script type="module" src="src/app.js?v=2026-02-08-inv-dock-v3"></script>
+    <script type="module" src="src/app.js?v=2026-02-10-inv-precision-toggle-v2"></script>
     <script type="module" src="../shared/iframe_autoheight.js"></script>
 </body>
 </html>

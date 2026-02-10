@@ -34,6 +34,15 @@
                                 <select id="heads-select"></select>
                             </label>
                             <label>
+                                Precision:
+                                <select id="attn-precision-select">
+                                    <option value="auto" selected>Auto</option>
+                                    <option value="int8">Int8</option>
+                                    <option value="int4">Int4</option>
+                                    <option value="fp32">FP32</option>
+                                </select>
+                            </label>
+                            <label>
                                 Zoom:
                                 <select id="bev-zoom-select">
                                     <option value="80">80×80m</option>
@@ -64,7 +73,7 @@
         </div>
     </div>
     
-    <script type="module" src="src/app.js?v=2026-02-08-forward-dock-v1"></script>
+    <script type="module" src="src/app.js?v=2026-02-10-forward-precision-toggle-v2"></script>
     <script type="module" src="../shared/iframe_autoheight.js"></script>
 </body>
 </html>

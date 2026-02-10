@@ -4,6 +4,7 @@
 
 import { ForwardAttentionVisualizer } from './forwardAttention.js';
 import { orderCameraNamesForUi } from '../../shared/cameraOrder.js';
+import { loadAttentionAsFloat32 } from '../../shared/attentionDecode.js?v=2026-02-10-attn-decode-v2';
 
 /**
  * Load base64 image string and convert to Image object
@@ -30,9 +31,11 @@ function loadImageFromUrl(url) {
  * Load scene data from JSON file
  *
  * @param {string} jsonPath - Path to JSON scene file
+ * @param {Object} options
+ * @param {string} options.attnPrecision - auto|int8|fp32
  * @returns {Promise<Object>} Loaded scene data with visualizer
  */
-export async function loadSceneData(jsonPath) {
+export async function loadSceneData(jsonPath, options = {}) {
     console.log(`Loading scene data from: ${jsonPath}`);
 
     // Resolve relative to the current page (works on GitHub Pages under /<repo>/)
@@ -97,17 +100,18 @@ export async function loadSceneData(jsonPath) {
     let attnWeightsShape = null;
     
     if (data.attn_weights_file) {
-        // Resolve relative to the JSON file location (robust to query params / encoding)
-        const attnFileUrl = new URL(data.attn_weights_file, jsonUrl);
-        const attnResponse = await fetch(attnFileUrl);
-        if (!attnResponse.ok) {
-            throw new Error(
-                `Failed to load attention weights file (${attnFileUrl.toString()}): ${attnResponse.status} ${attnResponse.statusText}`
+        const loaded = await loadAttentionAsFloat32(
+            data,
+            jsonUrl,
+            options.attnPrecision || 'auto'
+        );
+        attnWeights = loaded.float32;
+        attnWeightsShape = loaded.shape;
+        if (loaded.fallbackUsed) {
+            console.warn(
+                `Attention precision fallback used (requested=${loaded.requestedPrecision}, selected=${loaded.selectedPrecision}).`
             );
         }
-        const attnArrayBuffer = await attnResponse.arrayBuffer();
-        attnWeights = new Float32Array(attnArrayBuffer);
-        attnWeightsShape = data.attn_weights_shape;
     } else if (data.attn_weights_shape && Array.isArray(data.attn_weights)) {
         attnWeights = new Float32Array(data.attn_weights);
         attnWeightsShape = data.attn_weights_shape;

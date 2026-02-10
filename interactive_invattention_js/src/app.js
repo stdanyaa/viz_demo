@@ -3,7 +3,7 @@
  * Coordinates all components and handles user interactions
  */
 
-import { loadSceneData } from './dataLoader.js';
+import { loadSceneData } from './dataLoader.js?v=2026-02-10-inv-precision-toggle-v2';
 import { CameraThumbStrip } from '../../shared/CameraThumbStrip.js';
 import { CameraView } from './components/CameraView.js';
 import { BEVView } from './components/BEVView.js';
@@ -12,6 +12,14 @@ import { getDistinctColor } from './utils/colorUtils.js';
 import { DatasetFrameDock } from '../../shared/DatasetFrameDock.js';
 
 class App {
+    static normalizeAttnPrecision(raw) {
+        const v = (raw || 'auto').toString().trim().toLowerCase();
+        if (v === 'int8' || v === 'int8_phs_v1') return 'int8';
+        if (v === 'int4' || v === 'int4_phq_v1') return 'int4';
+        if (v === 'fp32' || v === 'float32') return 'fp32';
+        return 'auto';
+    }
+
     constructor() {
         this.visualizer = null;
         this.sceneData = null;
@@ -26,6 +34,7 @@ class App {
         this.mainContentEl = document.getElementById('main-content');
         this.errorEl = document.getElementById('error');
         this.errorMessageEl = document.getElementById('error-message');
+        this.attnPrecisionSelectEl = document.getElementById('attn-precision-select');
         
         // Initialize components
         this.cameraGallery = null;
@@ -102,17 +111,28 @@ class App {
                 this.clearAllCameras();
             });
         }
+
+        if (this.attnPrecisionSelectEl) {
+            this.attnPrecisionSelectEl.addEventListener('change', (e) => {
+                const selected = App.normalizeAttnPrecision(e.target.value);
+                const url = new URL(window.location.href);
+                url.searchParams.set('attn_precision', selected);
+                window.location.href = url.toString();
+            });
+        }
     }
     
     /**
      * Load scene data
      */
-    async loadScene(jsonPath) {
+    async loadScene(jsonPath, options = {}) {
         try {
             this.showLoading();
             this.hideError();
             
-            const sceneData = await loadSceneData(jsonPath);
+            const sceneData = await loadSceneData(jsonPath, {
+                attnPrecision: options.attnPrecision || 'auto'
+            });
             this.sceneData = sceneData;
             this.visualizer = sceneData.visualizer;
             this.sceneBevBaseImage = sceneData.metadata?.bev_base_image || '';
@@ -590,6 +610,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = new App();
     const defaultScene = 'data/scenes/scene_av2_(10, 23).json';
     const urlParams = new URLSearchParams(window.location.search);
+    const attnPrecision = App.normalizeAttnPrecision(urlParams.get('attn_precision') || 'auto');
+    if (app.attnPrecisionSelectEl) {
+        app.attnPrecisionSelectEl.value = attnPrecision;
+    }
 
     const dockContainer = document.getElementById('context-dock');
     const initDock = async () => {
@@ -625,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const bevBase = urlParams.get('bev_base') || '';
         if (bevBase) app.setUserBevBaseOverride(new URL(bevBase, window.location.href).toString());
-        app.loadScene(scenePath);
+        app.loadScene(scenePath, { attnPrecision });
         window.app = app;
     })();
 });
