@@ -3,7 +3,7 @@
  * Click BEV cell -> render per-camera attention overlays
  */
 
-import { loadSceneData } from './dataLoader.js?v=2026-02-10-forward-precision-toggle-v2';
+import { loadSceneData } from './dataLoader.js?v=2026-02-10-forward-manifest-only-v1';
 import { BEVView } from './components/BEVView.js';
 import { CameraStrip } from './components/CameraStrip.js';
 import { DatasetFrameDock } from '../../shared/DatasetFrameDock.js';
@@ -274,7 +274,6 @@ class App {
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = new App();
-    const defaultScene = 'data/scenes/scene_av2_(10, 23).json';
     const urlParams = new URLSearchParams(window.location.search);
     const attnPrecision = App.normalizeAttnPrecision(urlParams.get('attn_precision') || 'auto');
     if (app.attnPrecisionSelectEl) {
@@ -284,9 +283,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const dockContainer = document.getElementById('context-dock');
     const initDock = async () => {
         if (!dockContainer) return null;
-        const dock = new DatasetFrameDock(dockContainer, { demoKey: 'attention' });
-        await dock.init();
-        return dock;
+        try {
+            const dock = new DatasetFrameDock(dockContainer, { demoKey: 'attention' });
+            await dock.init();
+            return dock;
+        } catch (err) {
+            console.warn('Dataset dock init failed:', err);
+            return null;
+        }
     };
 
     (async () => {
@@ -303,9 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.history.replaceState({}, '', url.toString());
                 scenePath = def;
                 app.dock?.setSelectedBySceneUrl(def);
-            } else {
-                scenePath = defaultScene;
             }
+        }
+
+        if (!scenePath) {
+            app.showError(
+                'No canonical scene manifest provided. Pass ?scene=../artifacts/.../manifests/attention.scene.json or choose a scene from the dock.'
+            );
+            return;
         }
 
         const bevBase = urlParams.get('bev_base') || '';

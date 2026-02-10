@@ -6,18 +6,6 @@ import { ForwardAttentionVisualizer } from './forwardAttention.js';
 import { orderCameraNamesForUi } from '../../shared/cameraOrder.js';
 import { loadAttentionAsFloat32 } from '../../shared/attentionDecode.js?v=2026-02-10-attn-decode-v2';
 
-/**
- * Load base64 image string and convert to Image object
- */
-function loadBase64Image(base64String) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = `data:image/png;base64,${base64String}`;
-    });
-}
-
 function loadImageFromUrl(url) {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -32,7 +20,7 @@ function loadImageFromUrl(url) {
  *
  * @param {string} jsonPath - Path to JSON scene file
  * @param {Object} options
- * @param {string} options.attnPrecision - auto|int8|fp32
+ * @param {string} options.attnPrecision - auto|int8|int4|fp32
  * @returns {Promise<Object>} Loaded scene data with visualizer
  */
 export async function loadSceneData(jsonPath, options = {}) {
@@ -73,7 +61,6 @@ export async function loadSceneData(jsonPath, options = {}) {
     const patchSize = metadata.patch_size || 14;
     const bevRange = metadata.bev_range || [-40, 40, -40, 40];
     const hasClsTokens = metadata.has_cls_tokens !== undefined ? metadata.has_cls_tokens : true;
-    const imageFormat = metadata.image_format || 'base64';
     
     // Load images
     let cameraImages, originalImages;
@@ -88,35 +75,24 @@ export async function loadSceneData(jsonPath, options = {}) {
         } else {
             originalImages = cameraImages;
         }
-    } else if (imageFormat === 'base64') {
-        cameraImages = await Promise.all(data.scaled_images.map(loadBase64Image));
-        originalImages = await Promise.all(data.original_images.map(loadBase64Image));
     } else {
-        throw new Error('Array image format not yet supported');
+        throw new Error(
+            'Canonical manifest required: expected image_files (and optional original_image_files) in scene JSON.'
+        );
     }
     
-    // Load attention weights (binary preferred)
-    let attnWeights;
-    let attnWeightsShape = null;
-    
-    if (data.attn_weights_file) {
-        const loaded = await loadAttentionAsFloat32(
-            data,
-            jsonUrl,
-            options.attnPrecision || 'auto'
+    // Load attention weights from manifest-linked binary variants only.
+    const loaded = await loadAttentionAsFloat32(
+        data,
+        jsonUrl,
+        options.attnPrecision || 'auto'
+    );
+    const attnWeights = loaded.float32;
+    const attnWeightsShape = loaded.shape;
+    if (loaded.fallbackUsed) {
+        console.warn(
+            `Attention precision fallback used (requested=${loaded.requestedPrecision}, selected=${loaded.selectedPrecision}).`
         );
-        attnWeights = loaded.float32;
-        attnWeightsShape = loaded.shape;
-        if (loaded.fallbackUsed) {
-            console.warn(
-                `Attention precision fallback used (requested=${loaded.requestedPrecision}, selected=${loaded.selectedPrecision}).`
-            );
-        }
-    } else if (data.attn_weights_shape && Array.isArray(data.attn_weights)) {
-        attnWeights = new Float32Array(data.attn_weights);
-        attnWeightsShape = data.attn_weights_shape;
-    } else {
-        attnWeights = data.attn_weights;
     }
     
     const lidarPts = data.lidar_pts || null;

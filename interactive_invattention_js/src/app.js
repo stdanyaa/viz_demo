@@ -3,7 +3,7 @@
  * Coordinates all components and handles user interactions
  */
 
-import { loadSceneData } from './dataLoader.js?v=2026-02-10-inv-precision-toggle-v2';
+import { loadSceneData } from './dataLoader.js?v=2026-02-10-inv-manifest-only-v1';
 import { CameraThumbStrip } from '../../shared/CameraThumbStrip.js';
 import { CameraView } from './components/CameraView.js';
 import { BEVView } from './components/BEVView.js';
@@ -608,7 +608,6 @@ class App {
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     const app = new App();
-    const defaultScene = 'data/scenes/scene_av2_(10, 23).json';
     const urlParams = new URLSearchParams(window.location.search);
     const attnPrecision = App.normalizeAttnPrecision(urlParams.get('attn_precision') || 'auto');
     if (app.attnPrecisionSelectEl) {
@@ -642,9 +641,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.history.replaceState({}, '', url.toString());
                 scenePath = def;
                 app.dock?.setSelectedBySceneUrl(def);
-            } else {
-                scenePath = defaultScene;
             }
+        }
+
+        if (!scenePath) {
+            app.showError(
+                'No canonical scene manifest provided. Pass ?scene=../artifacts/.../manifests/attention.scene.json or choose a scene from the dock.'
+            );
+            return;
         }
 
         const bevBase = urlParams.get('bev_base') || '';

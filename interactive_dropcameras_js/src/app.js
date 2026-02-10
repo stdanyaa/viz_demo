@@ -10,9 +10,6 @@ import { InfiniteStrip } from "../../shared/InfiniteStrip.js";
 import { DatasetFrameDock } from "../../shared/DatasetFrameDock.js";
 import { detectCameraDataset, orderCameraNamesForUi } from "../../shared/cameraOrder.js";
 
-// Keep the demo self-contained under this app's folder (GH Pages-friendly).
-const DEFAULT_SCENE_DIR = "data/drop_scenes/av2_(10,23)";
-
 function $(id) {
   const el = document.getElementById(id);
   if (!el) throw new Error(`Missing element #${id}`);
@@ -137,7 +134,6 @@ class DropCamerasApp {
     this._resizeObserver = null;
 
     this.sceneConfig = {
-      sceneDir: DEFAULT_SCENE_DIR,
       allImage: null,
       cameraMetaFile: null,
       cameraImages: {},
@@ -152,10 +148,10 @@ class DropCamerasApp {
     await this._loadSceneConfigFromUrl();
 
     // Images
-    this.imgAll.src = this.sceneConfig.allImage || `${this.sceneConfig.sceneDir}/all.jpg`;
+    this.imgAll.src = this.sceneConfig.allImage;
 
     // Metadata: generated from metadata.npz.npy by python script
-    const metaUrl = this.sceneConfig.cameraMetaFile || `${this.sceneConfig.sceneDir}/metadata.json`;
+    const metaUrl = this.sceneConfig.cameraMetaFile;
     this.meta = normalizeMetaForFrustums(await fetchJson(metaUrl));
 
     this.cams =
@@ -176,6 +172,12 @@ class DropCamerasApp {
     }
 
     if (this.cams.length === 0) throw new Error("No cameras found in metadata.json");
+    const missingCameraImages = this.cams.filter((cam) => !this.sceneConfig.cameraImages?.[cam]);
+    if (missingCameraImages.length > 0) {
+      throw new Error(
+        `Missing camera_images entries for: ${missingCameraImages.join(", ")}`
+      );
+    }
 
     // Optional bounds override from metadata.json
     if (this.meta.bounds?.x && this.meta.bounds?.y) {
@@ -284,28 +286,40 @@ class DropCamerasApp {
   }
 
   _cameraImageSrc(cam) {
-    return this.sceneConfig.cameraImages?.[cam] || `${this.sceneConfig.sceneDir}/${cam}.jpg`;
+    const src = this.sceneConfig.cameraImages?.[cam];
+    if (!src) {
+      throw new Error(`Missing camera image for '${cam}' in dropcameras scene manifest.`);
+    }
+    return src;
   }
 
   _cameraThumbSrc(cam) {
-    return (
-      this.sceneConfig.cameraThumbImages?.[cam] ||
-      this.sceneConfig.cameraImages?.[cam] ||
-      `${this.sceneConfig.sceneDir}/${cam}_cam.jpg`
-    );
+    return this.sceneConfig.cameraThumbImages?.[cam] || this._cameraImageSrc(cam);
   }
 
   async _loadSceneConfigFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const sceneManifestPath = params.get("scene");
-    if (!sceneManifestPath) return;
+    if (!sceneManifestPath) {
+      throw new Error(
+        "No canonical scene manifest provided. Pass ?scene=../artifacts/.../manifests/dropcameras.scene.json or choose a scene from the dock."
+      );
+    }
 
     const manifestUrl = new URL(sceneManifestPath, window.location.href);
     const scene = await fetchJson(manifestUrl.toString());
+    if (!scene.all_image || !scene.camera_meta_file) {
+      throw new Error(
+        "Invalid dropcameras scene manifest: expected all_image and camera_meta_file."
+      );
+    }
 
     const resolvedCameraImages = {};
     for (const [cam, p] of Object.entries(scene.camera_images || {})) {
       resolvedCameraImages[cam] = resolveUrl(p, manifestUrl);
+    }
+    if (Object.keys(resolvedCameraImages).length === 0) {
+      throw new Error("Invalid dropcameras scene manifest: camera_images is required.");
     }
 
     const resolvedThumbImages = {};
@@ -319,7 +333,6 @@ class DropCamerasApp {
     }
 
     this.sceneConfig = {
-      sceneDir: DEFAULT_SCENE_DIR,
       allImage: resolveUrl(scene.all_image, manifestUrl),
       cameraMetaFile: resolveUrl(scene.camera_meta_file, manifestUrl),
       cameraImages: resolvedCameraImages,
@@ -416,8 +429,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const app = new DropCamerasApp();
     const dockContainer = document.getElementById("context-dock");
     if (dockContainer) {
-      app.dock = new DatasetFrameDock(dockContainer, { demoKey: "dropcameras" });
-      await app.dock.init();
+      try {
+        app.dock = new DatasetFrameDock(dockContainer, { demoKey: "dropcameras" });
+        await app.dock.init();
+      } catch (err) {
+        console.warn("Dataset dock init failed:", err);
+        app.dock = null;
+      }
     }
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -432,6 +450,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.history.replaceState({}, "", url.toString());
         scenePath = def;
         app.dock?.setSelectedBySceneUrl(def);
+      } else {
+        throw new Error(
+          "No canonical scene manifest provided. Pass ?scene=../artifacts/.../manifests/dropcameras.scene.json or configure a default in the dock."
+        );
       }
     }
 
