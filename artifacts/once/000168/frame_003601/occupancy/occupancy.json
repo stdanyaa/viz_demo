@@ -21,8 +21,14 @@
   },
   "voxel_size": 0.2,
   "occupancy_range": [
-    2.272565247096736e-08,
-    0.9998924732208252
+    1.596009609194926e-11,
+    0.9999750852584839
   ],
-  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_once_snatch_000168_frame_003601/all/occupancy_grid.npz"
+  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_once_snatch_000168_frame_003601/all/occupancy_grid.npz",
+  "dtype": "bit",
+  "encoding": "bitset",
+  "num_voxels": 5120000,
+  "bake_threshold": 0.5,
+  "bitorder": "lsb0",
+  "packed_bytes": 640000
 }

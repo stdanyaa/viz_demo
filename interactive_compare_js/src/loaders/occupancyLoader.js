@@ -26,19 +26,40 @@ export async function loadOccupancyData(jsonPath) {
   }
 
   const arrayBuffer = await binResponse.arrayBuffer();
-  const occupancyFlat = new Float32Array(arrayBuffer);
-
   const expectedSize = metadata.grid_shape.reduce((a, b) => a * b, 1);
+  const encoding = typeof metadata.encoding === 'string' ? metadata.encoding : 'raw';
+
+  if (encoding === 'bitset') {
+    const occupancyBits = new Uint8Array(arrayBuffer);
+    const expectedBytes = Math.ceil(expectedSize / 8);
+    if (occupancyBits.length !== expectedBytes) {
+      console.warn(`Warning: occupancy bitset size (${occupancyBits.length}) != expected (${expectedBytes})`);
+    }
+    return {
+      encoding: 'bitset',
+      occupancyBits,
+      numVoxels: Number(metadata.num_voxels || expectedSize),
+      bitorder: metadata.bitorder || 'lsb0',
+      bakeThreshold: Number(metadata.bake_threshold),
+      gridShape: metadata.grid_shape,
+      bounds: metadata.bounds,
+      voxelSize: metadata.voxel_size,
+      occupancyRange: metadata.occupancy_range,
+    };
+  }
+
+  const occupancyFlat = new Float32Array(arrayBuffer);
   if (occupancyFlat.length !== expectedSize) {
     console.warn(`Warning: occupancy binary size (${occupancyFlat.length}) != expected (${expectedSize})`);
   }
 
   return {
+    encoding: 'raw',
     occupancy: occupancyFlat,
+    numVoxels: expectedSize,
     gridShape: metadata.grid_shape,
     bounds: metadata.bounds,
     voxelSize: metadata.voxel_size,
     occupancyRange: metadata.occupancy_range,
   };
 }
-

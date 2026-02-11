@@ -24,5 +24,11 @@
     1.1515163128583694e-10,
     0.9999929666519165
   ],
-  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_av2_snatch_a89557fc-1268-36e5-9cce-335f2da27bc8_frame_014779/all/occupancy_grid.npz"
+  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_av2_snatch_a89557fc-1268-36e5-9cce-335f2da27bc8_frame_014779/all/occupancy_grid.npz",
+  "dtype": "bit",
+  "encoding": "bitset",
+  "num_voxels": 5120000,
+  "bake_threshold": 0.5,
+  "bitorder": "lsb0",
+  "packed_bytes": 640000
 }

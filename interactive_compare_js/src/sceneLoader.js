@@ -1,5 +1,5 @@
-import { loadOccupancyData } from './loaders/occupancyLoader.js';
-import { loadPointCloudData } from './loaders/pointCloudLoader.js';
+import { loadOccupancyData } from './loaders/occupancyLoader.js?v=2026-02-11-bitset-fix2';
+import { loadPointCloudData } from './loaders/pointCloudLoader.js?v=2026-02-11-bitset-fix2';
 
 async function fetchJson(url) {
   const res = await fetch(url);
@@ -59,4 +59,3 @@ export async function loadCompareScene(sceneJsonPath) {
     pointclouds,
   };
 }
-

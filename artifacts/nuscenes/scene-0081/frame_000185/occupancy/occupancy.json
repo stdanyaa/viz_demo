@@ -24,5 +24,11 @@
     1.49669181155944e-19,
     0.9999905824661255
   ],
-  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_nuscenes_snatch_scene-0081_frame_000185/all/occupancy_grid.npz"
+  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_nuscenes_snatch_scene-0081_frame_000185/all/occupancy_grid.npz",
+  "dtype": "bit",
+  "encoding": "bitset",
+  "num_voxels": 5120000,
+  "bake_threshold": 0.5,
+  "bitorder": "lsb0",
+  "packed_bytes": 640000
 }

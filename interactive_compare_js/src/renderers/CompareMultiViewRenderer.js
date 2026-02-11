@@ -19,40 +19,95 @@ function sizeCanvasRenderer(renderer, canvas) {
   return { wCss, hCss };
 }
 
-function visualizeOccupancyWithCubes(occupancy, gridShape, bounds, threshold = 0.01) {
+function visualizeOccupancyWithCubes(occupancyData, options = {}) {
+  const gridShape = occupancyData.gridShape;
+  const bounds = occupancyData.bounds;
+  const occupancy = occupancyData.occupancy;
+  const occupancyBits = occupancyData.occupancyBits;
+  const occEncoding = occupancyData.encoding || (occupancyBits ? 'bitset' : 'raw');
   const [nx, ny, nz] = gridShape;
   const [xMin, xMax] = bounds.x;
   const [yMin, yMax] = bounds.y;
   const [zMin, zMax] = bounds.z;
 
-  const zFilterMin = -1.0;
-  const zFilterMax = 3.5;
-
   const voxelSizeX = (xMax - xMin) / nx;
   const voxelSizeY = (yMax - yMin) / ny;
   const voxelSizeZ = (zMax - zMin) / nz;
+  const defaultZFilterMin = zMin;
+  const defaultZFilterMax = Math.min(zMax, 3.5);
+
+  let threshold = Number(options.threshold);
+  if (!Number.isFinite(threshold)) threshold = 0.5;
+  threshold = Math.max(0, threshold);
+
+  let zFilterMin = Number(options.zFilterMin);
+  if (!Number.isFinite(zFilterMin)) zFilterMin = defaultZFilterMin;
+
+  let zFilterMax = Number(options.zFilterMax);
+  if (!Number.isFinite(zFilterMax)) zFilterMax = defaultZFilterMax;
+
+  const dropTopLayers = Math.max(0, Math.floor(Number(options.dropTopLayers) || 0));
+  if (dropTopLayers > 0) {
+    zFilterMax -= dropTopLayers * voxelSizeZ;
+  }
+
+  // Keep filter range sane even for extreme URL values.
+  zFilterMin = Math.max(zMin, zFilterMin);
+  zFilterMax = Math.min(zMax, zFilterMax);
+  if (zFilterMax <= zFilterMin) {
+    zFilterMax = Math.min(zMax, zFilterMin + voxelSizeZ);
+  }
 
   const binSize = 0.1;
   const voxelsByZBin = new Map();
+  const xyStride = nz * ny;
+  const addVoxel = (x, y, z) => {
+    const worldZ = zMin + (z + 0.5) * voxelSizeZ;
+    if (worldZ < zFilterMin || worldZ > zFilterMax) return;
 
-  // z + y*nz + x*nz*ny
-  for (let x = 0; x < nx; x++) {
-    for (let y = 0; y < ny; y++) {
-      for (let z = 0; z < nz; z++) {
-        const idx = z + y * nz + x * nz * ny;
-        const p = occupancy[idx];
-        if (p <= threshold) continue;
+    const zBin = Math.floor(worldZ / binSize);
+    let arr = voxelsByZBin.get(zBin);
+    if (!arr) {
+      arr = [];
+      voxelsByZBin.set(zBin, arr);
+    }
+    arr.push({ x, y, z, worldZ });
+  };
 
-        const worldZ = zMin + (z + 0.5) * voxelSizeZ;
-        if (worldZ < zFilterMin || worldZ > zFilterMax) continue;
+  if (occEncoding === 'bitset') {
+    const numVoxels = Number(occupancyData.numVoxels) || (nx * ny * nz);
+    const bakeThreshold = Number(occupancyData.bakeThreshold);
+    if (Number.isFinite(bakeThreshold) && Math.abs(threshold - bakeThreshold) > 1e-9) {
+      console.warn(
+        `Bitset occupancy was baked at threshold=${bakeThreshold}; URL threshold=${threshold} cannot change selection.`
+      );
+    }
 
-        const zBin = Math.floor(worldZ / binSize);
-        let arr = voxelsByZBin.get(zBin);
-        if (!arr) {
-          arr = [];
-          voxelsByZBin.set(zBin, arr);
+    for (let byteIdx = 0; byteIdx < occupancyBits.length; byteIdx++) {
+      const byteVal = occupancyBits[byteIdx];
+      if (byteVal === 0) continue;
+      for (let bit = 0; bit < 8; bit++) {
+        if ((byteVal & (1 << bit)) === 0) continue;
+        const idx = (byteIdx << 3) + bit;
+        if (idx >= numVoxels) break;
+        const x = Math.floor(idx / xyStride);
+        const rem = idx - x * xyStride;
+        const y = Math.floor(rem / nz);
+        const z = rem - y * nz;
+        addVoxel(x, y, z);
+      }
+    }
+  } else {
+    // z + y*nz + x*nz*ny
+    for (let x = 0; x < nx; x++) {
+      for (let y = 0; y < ny; y++) {
+        for (let z = 0; z < nz; z++) {
+          const idx = z + y * nz + x * nz * ny;
+          if (idx >= occupancy.length) continue;
+          const p = occupancy[idx];
+          if (p <= threshold) continue;
+          addVoxel(x, y, z);
         }
-        arr.push({ x, y, z, worldZ });
       }
     }
   }
@@ -66,7 +121,8 @@ function visualizeOccupancyWithCubes(occupancy, gridShape, bounds, threshold = 0
     if (!cubeCount) return;
 
     const avgWorldZ = voxels[0].worldZ;
-    const t = Math.max(0, Math.min(1, (avgWorldZ - zFilterMin) / (zFilterMax - zFilterMin)));
+    const zSpan = Math.max(1e-6, zFilterMax - zFilterMin);
+    const t = Math.max(0, Math.min(1, (avgWorldZ - zFilterMin) / zSpan));
     const [r, g, b] = turboColormap(t);
 
     const material = new THREE.MeshBasicMaterial({
@@ -131,9 +187,10 @@ function buildPointCloud(points, count, bounds, opts = {}) {
 }
 
 export class CompareMultiViewRenderer {
-  constructor(canvases, occupancyData, pointCloudDatas = []) {
+  constructor(canvases, occupancyData, pointCloudDatas = [], occRenderOptions = {}) {
     this.canvases = canvases; // { occ, pcA, pcB }
     this.occ = occupancyData;
+    this.occRenderOptions = occRenderOptions;
 
     this.rendererOcc = null;
     this.rendererPc = [null, null];
@@ -241,10 +298,8 @@ export class CompareMultiViewRenderer {
 
     // Build occupancy scene
     const occGroup = visualizeOccupancyWithCubes(
-      this.occ.occupancy,
-      this.occ.gridShape,
-      this.occ.bounds,
-      0.01
+      this.occ,
+      this.occRenderOptions
     );
     if (FLIP_LEFT_RIGHT) {
       occGroup.scale.x = -1;

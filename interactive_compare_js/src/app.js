@@ -4,10 +4,10 @@
  * - bottom: shared-controls multi-view (occupancy + 1-2 point clouds)
  */
 
-import { loadCompareScene } from './sceneLoader.js';
+import { loadCompareScene } from './sceneLoader.js?v=2026-02-11-bitset-fix2';
 import { ImageStrip } from '../../shared/ImageStrip.js';
-import { loadPointCloudData } from './loaders/pointCloudLoader.js';
-import { CompareMultiViewRenderer } from './renderers/CompareMultiViewRenderer.js';
+import { loadPointCloudData } from './loaders/pointCloudLoader.js?v=2026-02-11-bitset-fix2';
+import { CompareMultiViewRenderer } from './renderers/CompareMultiViewRenderer.js?v=2026-02-11-bitset-fix2';
 import { DatasetFrameDock } from '../../shared/DatasetFrameDock.js';
 import { orderCameraItemsForUi } from '../../shared/cameraOrder.js';
 
@@ -41,10 +41,12 @@ class App {
     this.scene = null;
     this.pcOptions = [];
     this.pcCacheByUrl = new Map(); // url -> pointcloudData
+    this.occRenderOptions = {};
   }
 
   async init() {
     const urlParams = new URLSearchParams(window.location.search);
+    this.occRenderOptions = this._parseOccRenderOptions(urlParams);
     const dockContainer = document.getElementById('context-dock');
     if (dockContainer) {
       this.dock = new DatasetFrameDock(dockContainer, { demoKey: 'compare' });
@@ -162,6 +164,10 @@ class App {
       url.searchParams.delete('panes');
       url.searchParams.delete('pcA');
       url.searchParams.delete('pcB');
+      url.searchParams.delete('vox_threshold');
+      url.searchParams.delete('vox_z_min');
+      url.searchParams.delete('vox_z_max');
+      url.searchParams.delete('vox_top_layers');
       window.location.href = url.toString();
     });
 
@@ -211,7 +217,39 @@ class App {
       pcA: this.canvasPcA,
       pcB: panes === 3 ? this.canvasPcB : null,
     };
-    this.renderer = new CompareMultiViewRenderer(canvases, this.scene.occupancy, [pcAData, pcBData]);
+    this.renderer = new CompareMultiViewRenderer(
+      canvases,
+      this.scene.occupancy,
+      [pcAData, pcBData],
+      this.occRenderOptions
+    );
+  }
+
+  _parseOccRenderOptions(urlParams) {
+    const readNum = (...keys) => {
+      for (const key of keys) {
+        const raw = urlParams.get(key);
+        if (raw === null || raw === '') continue;
+        const v = Number(raw);
+        if (Number.isFinite(v)) return v;
+      }
+      return undefined;
+    };
+
+    const threshold = readNum('vox_threshold', 'occ_threshold');
+    const zFilterMin = readNum('vox_z_min', 'occ_z_min');
+    const zFilterMax = readNum('vox_z_max', 'occ_z_max');
+    const topLayersRaw = readNum('vox_top_layers', 'occ_top_layers');
+    const dropTopLayers = Number.isFinite(topLayersRaw)
+      ? Math.max(0, Math.floor(topLayersRaw))
+      : undefined;
+
+    const opts = {};
+    if (Number.isFinite(threshold)) opts.threshold = threshold;
+    if (Number.isFinite(zFilterMin)) opts.zFilterMin = zFilterMin;
+    if (Number.isFinite(zFilterMax)) opts.zFilterMax = zFilterMax;
+    if (Number.isFinite(dropTopLayers)) opts.dropTopLayers = dropTopLayers;
+    return opts;
   }
 
   _applyPaneMode(panes) {

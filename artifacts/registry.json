@@ -5,47 +5,17 @@
       "dataset": "av2",
       "scenes": [
         {
-          "scene_id": "av2_s01",
-          "source_scene_id": "av2_s01",
+          "scene_id": "av2_s33",
+          "source_scene_id": "4612f4a4-59b0-37d4-b3d1-400a1324920c",
           "frames": [
             {
-              "frame_id": "frame_000121",
-              "path": "av2/av2_s01/frame_000121",
+              "frame_id": "frame_005295",
+              "path": "av2/av2_s33/frame_005295",
               "manifests": {
-                "frame": "av2/av2_s01/frame_000121/manifests/frame.json",
-                "compare": "av2/av2_s01/frame_000121/manifests/compare.scene.json",
-                "attention": null,
-                "dropcameras": null
-              },
-              "modalities": {
-                "images": true,
-                "attention": false,
-                "occupancy": true,
-                "pointclouds": [
-                  "vigt",
-                  "gt",
-                  "renderocc",
-                  "cut3r",
-                  "vggt"
-                ],
-                "bev_base_images": [],
-                "baked_occ": false
-              }
-            }
-          ]
-        },
-        {
-          "scene_id": "av2_s41",
-          "source_scene_id": "4e6d6bcd-8718-3e71-b9c1-7c352c991a56",
-          "frames": [
-            {
-              "frame_id": "frame_006565",
-              "path": "av2/av2_s41/frame_006565",
-              "manifests": {
-                "frame": "av2/av2_s41/frame_006565/manifests/frame.json",
-                "compare": "av2/av2_s41/frame_006565/manifests/compare.scene.json",
-                "attention": "av2/av2_s41/frame_006565/manifests/attention.scene.json",
-                "dropcameras": "av2/av2_s41/frame_006565/manifests/dropcameras.scene.json"
+                "frame": "av2/av2_s33/frame_005295/manifests/frame.json",
+                "compare": "av2/av2_s33/frame_005295/manifests/compare.scene.json",
+                "attention": "av2/av2_s33/frame_005295/manifests/attention.scene.json",
+                "dropcameras": "av2/av2_s33/frame_005295/manifests/dropcameras.scene.json"
               },
               "modalities": {
                 "images": true,
@@ -69,17 +39,17 @@
           ]
         },
         {
-          "scene_id": "av2_s33",
-          "source_scene_id": "4612f4a4-59b0-37d4-b3d1-400a1324920c",
+          "scene_id": "av2_s41",
+          "source_scene_id": "4e6d6bcd-8718-3e71-b9c1-7c352c991a56",
           "frames": [
             {
-              "frame_id": "frame_005295",
-              "path": "av2/av2_s33/frame_005295",
+              "frame_id": "frame_006565",
+              "path": "av2/av2_s41/frame_006565",
               "manifests": {
-                "frame": "av2/av2_s33/frame_005295/manifests/frame.json",
-                "compare": "av2/av2_s33/frame_005295/manifests/compare.scene.json",
-                "attention": "av2/av2_s33/frame_005295/manifests/attention.scene.json",
-                "dropcameras": "av2/av2_s33/frame_005295/manifests/dropcameras.scene.json"
+                "frame": "av2/av2_s41/frame_006565/manifests/frame.json",
+                "compare": "av2/av2_s41/frame_006565/manifests/compare.scene.json",
+                "attention": "av2/av2_s41/frame_006565/manifests/attention.scene.json",
+                "dropcameras": "av2/av2_s41/frame_006565/manifests/dropcameras.scene.json"
               },
               "modalities": {
                 "images": true,

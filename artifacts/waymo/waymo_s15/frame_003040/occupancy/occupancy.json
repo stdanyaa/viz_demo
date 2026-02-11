@@ -24,5 +24,11 @@
     1.164093100343086e-13,
     0.9999814033508301
   ],
-  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_waymo_snatch_test_8993680275027614595_2520_000_2540_000_frame_003040/all/occupancy_grid.npz"
+  "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_waymo_snatch_test_8993680275027614595_2520_000_2540_000_frame_003040/all/occupancy_grid.npz",
+  "dtype": "bit",
+  "encoding": "bitset",
+  "num_voxels": 5120000,
+  "bake_threshold": 0.5,
+  "bitorder": "lsb0",
+  "packed_bytes": 640000
 }

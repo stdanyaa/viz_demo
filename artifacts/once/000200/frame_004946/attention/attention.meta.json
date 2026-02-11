@@ -21,19 +21,6 @@
   "has_cls_tokens": true,
   "source": "/Users/danya/vigt_viz/demo/artifacts_out/data_raw_once_snatch_000200_frame_004946/all/attention.npz",
   "quantized_variants": {
-    "int8_phs_v1": {
-      "file": "attention.int8.bin",
-      "dtype": "int8",
-      "encoding": "symmetric_per_head",
-      "scale_file": "attention.int8.scales.bin",
-      "scale_dtype": "float32",
-      "scale_shape": [
-        1,
-        8,
-        1,
-        1
-      ]
-    },
     "int4_phq_v1": {
       "file": "attention.int4.bin",
       "dtype": "int4",
