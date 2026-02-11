@@ -99,7 +99,7 @@ class App {
         enableSelection: false,
         alwaysPannable: true,
         // Reduce duplicate DOM/images; still infinite, just fewer segments.
-        maxSegments: 5,
+        maxSegments: 3,
         itemClass: 'thumb'
       });
 

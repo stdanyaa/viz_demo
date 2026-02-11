@@ -8,20 +8,20 @@
     "cam09"
   ],
   "image_files": [
-    "../images/cam01__scaled.jpg",
-    "../images/cam05__scaled.jpg",
-    "../images/cam06__scaled.jpg",
-    "../images/cam07__scaled.jpg",
-    "../images/cam08__scaled.jpg",
-    "../images/cam09__scaled.jpg"
+    "../images/cam01__scaled.webp",
+    "../images/cam05__scaled.webp",
+    "../images/cam06__scaled.webp",
+    "../images/cam07__scaled.webp",
+    "../images/cam08__scaled.webp",
+    "../images/cam09__scaled.webp"
   ],
   "original_image_files": [
-    "../images/cam01.jpg",
-    "../images/cam05.jpg",
-    "../images/cam06.jpg",
-    "../images/cam07.jpg",
-    "../images/cam08.jpg",
-    "../images/cam09.jpg"
+    "../images/cam01.webp",
+    "../images/cam05.webp",
+    "../images/cam06.webp",
+    "../images/cam07.webp",
+    "../images/cam08.webp",
+    "../images/cam09.webp"
   ],
   "attn_weights_file": "../attention/attention.bin",
   "attn_weights_shape": [
@@ -48,6 +48,19 @@
         1024,
         1
       ]
+    },
+    "int8_phs_v1": {
+      "file": "../attention/attention.int8.bin",
+      "dtype": "int8",
+      "encoding": "symmetric_per_head",
+      "scale_file": "../attention/attention.int8.scales.bin",
+      "scale_dtype": "float32",
+      "scale_shape": [
+        1,
+        8,
+        1,
+        1
+      ]
     }
   },
   "lidar_pts": null,
@@ -71,11 +84,11 @@
       "cam09"
     ],
     "bev_base_images": {
-      "80": "../images/bev_gt_80m.jpg",
-      "40": "../images/bev_gt_40m.jpg",
-      "20": "../images/bev_gt_20m.jpg"
+      "80": "../images/bev_gt_80m.webp",
+      "40": "../images/bev_gt_40m.webp",
+      "20": "../images/bev_gt_20m.webp"
     },
-    "bev_base_image": "../images/bev_gt_80m.jpg",
+    "bev_base_image": "../images/bev_gt_80m.webp",
     "attn_precision_default": "int4_phq_v1"
   }
 }

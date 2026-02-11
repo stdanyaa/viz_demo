@@ -17,22 +17,31 @@
     "images": {
       "available": true,
       "files": {
-        "ring_front_center": "images/ring_front_center.jpg",
-        "ring_front_left": "images/ring_front_left.jpg",
-        "ring_front_right": "images/ring_front_right.jpg",
-        "ring_rear_left": "images/ring_rear_left.jpg",
-        "ring_rear_right": "images/ring_rear_right.jpg",
-        "ring_side_left": "images/ring_side_left.jpg",
-        "ring_side_right": "images/ring_side_right.jpg"
+        "ring_front_center": "images/ring_front_center.webp",
+        "ring_front_left": "images/ring_front_left.webp",
+        "ring_front_right": "images/ring_front_right.webp",
+        "ring_rear_left": "images/ring_rear_left.webp",
+        "ring_rear_right": "images/ring_rear_right.webp",
+        "ring_side_left": "images/ring_side_left.webp",
+        "ring_side_right": "images/ring_side_right.webp"
       },
       "scaled_files": {
-        "ring_front_center": "images/ring_front_center.jpg",
-        "ring_front_left": "images/ring_front_left.jpg",
-        "ring_front_right": "images/ring_front_right.jpg",
-        "ring_rear_left": "images/ring_rear_left.jpg",
-        "ring_rear_right": "images/ring_rear_right.jpg",
-        "ring_side_left": "images/ring_side_left.jpg",
-        "ring_side_right": "images/ring_side_right.jpg"
+        "ring_front_center": "images/ring_front_center.webp",
+        "ring_front_left": "images/ring_front_left.webp",
+        "ring_front_right": "images/ring_front_right.webp",
+        "ring_rear_left": "images/ring_rear_left.webp",
+        "ring_rear_right": "images/ring_rear_right.webp",
+        "ring_side_left": "images/ring_side_left.webp",
+        "ring_side_right": "images/ring_side_right.webp"
+      },
+      "thumb_files": {
+        "ring_front_center": "images/ring_front_center__thumb.webp",
+        "ring_front_left": "images/ring_front_left__thumb.webp",
+        "ring_front_right": "images/ring_front_right__thumb.webp",
+        "ring_rear_left": "images/ring_rear_left__thumb.webp",
+        "ring_rear_right": "images/ring_rear_right__thumb.webp",
+        "ring_side_left": "images/ring_side_left__thumb.webp",
+        "ring_side_right": "images/ring_side_right__thumb.webp"
       }
     },
     "attention": {

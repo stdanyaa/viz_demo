@@ -265,6 +265,8 @@ class DropCamerasApp {
         img.className = "cameraButton__img";
         img.alt = `Camera ${it.label}`;
         img.loading = "lazy";
+        img.decoding = "async";
+        img.fetchPriority = "low";
         img.src = it.src;
 
         const label = document.createElement("div");

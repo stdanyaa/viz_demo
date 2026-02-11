@@ -3,27 +3,27 @@
   "images": [
     {
       "name": "cam01",
-      "url": "../images/cam01.jpg"
+      "url": "../images/cam01__thumb.webp"
     },
     {
       "name": "cam05",
-      "url": "../images/cam05.jpg"
+      "url": "../images/cam05__thumb.webp"
     },
     {
       "name": "cam06",
-      "url": "../images/cam06.jpg"
+      "url": "../images/cam06__thumb.webp"
     },
     {
       "name": "cam07",
-      "url": "../images/cam07.jpg"
+      "url": "../images/cam07__thumb.webp"
     },
     {
       "name": "cam08",
-      "url": "../images/cam08.jpg"
+      "url": "../images/cam08__thumb.webp"
     },
     {
       "name": "cam09",
-      "url": "../images/cam09.jpg"
+      "url": "../images/cam09__thumb.webp"
     }
   ],
   "occupancy": {

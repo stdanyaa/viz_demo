@@ -208,7 +208,7 @@ class App {
             thumbWidth: 240,
             thumbHeight: 160,
             alwaysPannable: true,
-            maxSegments: 7
+            maxSegments: 3
         });
         
         // Update thumbnails (use try-catch to isolate errors)

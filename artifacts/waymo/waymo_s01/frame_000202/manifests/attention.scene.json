@@ -7,18 +7,18 @@
     "RIGHT"
   ],
   "image_files": [
-    "../images/FRONT__scaled.jpg",
-    "../images/FRONT_LEFT__scaled.jpg",
-    "../images/FRONT_RIGHT__scaled.jpg",
-    "../images/LEFT__scaled.jpg",
-    "../images/RIGHT__scaled.jpg"
+    "../images/FRONT__scaled.webp",
+    "../images/FRONT_LEFT__scaled.webp",
+    "../images/FRONT_RIGHT__scaled.webp",
+    "../images/LEFT__scaled.webp",
+    "../images/RIGHT__scaled.webp"
   ],
   "original_image_files": [
-    "../images/FRONT.jpg",
-    "../images/FRONT_LEFT.jpg",
-    "../images/FRONT_RIGHT.jpg",
-    "../images/LEFT.jpg",
-    "../images/RIGHT.jpg"
+    "../images/FRONT.webp",
+    "../images/FRONT_LEFT.webp",
+    "../images/FRONT_RIGHT.webp",
+    "../images/LEFT.webp",
+    "../images/RIGHT.webp"
   ],
   "attn_weights_file": "../attention/attention.bin",
   "attn_weights_shape": [
@@ -32,6 +32,32 @@
       "file": "../attention/attention.bin",
       "dtype": "float32",
       "encoding": "raw"
+    },
+    "int8_phs_v1": {
+      "file": "../attention/attention.int8.bin",
+      "dtype": "int8",
+      "encoding": "symmetric_per_head",
+      "scale_file": "../attention/attention.int8.scales.bin",
+      "scale_dtype": "float32",
+      "scale_shape": [
+        1,
+        8,
+        1,
+        1
+      ]
+    },
+    "int4_phq_v1": {
+      "file": "../attention/attention.int4.bin",
+      "dtype": "int4",
+      "encoding": "symmetric_per_head_query_packed_int4",
+      "scale_file": "../attention/attention.int4.scales.bin",
+      "scale_dtype": "float32",
+      "scale_shape": [
+        1,
+        8,
+        1024,
+        1
+      ]
     }
   },
   "lidar_pts": null,
@@ -54,10 +80,11 @@
       "RIGHT"
     ],
     "bev_base_images": {
-      "80": "../images/bev_gt_80m.jpg",
-      "40": "../images/bev_gt_40m.jpg",
-      "20": "../images/bev_gt_20m.jpg"
+      "80": "../images/bev_gt_80m.webp",
+      "40": "../images/bev_gt_40m.webp",
+      "20": "../images/bev_gt_20m.webp"
     },
-    "bev_base_image": "../images/bev_gt_80m.jpg"
+    "bev_base_image": "../images/bev_gt_80m.webp",
+    "attn_precision_default": "int4_phq_v1"
   }
 }

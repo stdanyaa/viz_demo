@@ -3,31 +3,31 @@
   "images": [
     {
       "name": "ring front center",
-      "url": "../images/ring_front_center.jpg"
+      "url": "../images/ring_front_center__thumb.webp"
     },
     {
       "name": "ring front left",
-      "url": "../images/ring_front_left.jpg"
+      "url": "../images/ring_front_left__thumb.webp"
     },
     {
       "name": "ring front right",
-      "url": "../images/ring_front_right.jpg"
+      "url": "../images/ring_front_right__thumb.webp"
     },
     {
       "name": "ring rear left",
-      "url": "../images/ring_rear_left.jpg"
+      "url": "../images/ring_rear_left__thumb.webp"
     },
     {
       "name": "ring rear right",
-      "url": "../images/ring_rear_right.jpg"
+      "url": "../images/ring_rear_right__thumb.webp"
     },
     {
       "name": "ring side left",
-      "url": "../images/ring_side_left.jpg"
+      "url": "../images/ring_side_left__thumb.webp"
     },
     {
       "name": "ring side right",
-      "url": "../images/ring_side_right.jpg"
+      "url": "../images/ring_side_right__thumb.webp"
     }
   ],
   "occupancy": {

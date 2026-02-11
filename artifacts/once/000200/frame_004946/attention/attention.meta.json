@@ -33,6 +33,19 @@
         1024,
         1
       ]
+    },
+    "int8_phs_v1": {
+      "file": "attention.int8.bin",
+      "dtype": "int8",
+      "encoding": "symmetric_per_head",
+      "scale_file": "attention.int8.scales.bin",
+      "scale_dtype": "float32",
+      "scale_shape": [
+        1,
+        8,
+        1,
+        1
+      ]
     }
   },
   "attn_precision_default": "int4_phq_v1"

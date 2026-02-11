@@ -37,6 +37,8 @@ export class ImageStrip {
       renderMainItem: (el, it) => {
         const img = document.createElement('img');
         img.loading = 'lazy';
+        img.decoding = 'async';
+        img.fetchPriority = 'low';
         img.alt = it.label || it.key || 'image';
         img.src = it.src;
         el.appendChild(img);
@@ -70,4 +72,3 @@ export class ImageStrip {
     return this._selected;
   }
 }
-

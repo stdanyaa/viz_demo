@@ -15,18 +15,25 @@
     "images": {
       "available": true,
       "files": {
-        "FRONT": "images/FRONT.jpg",
-        "FRONT_LEFT": "images/FRONT_LEFT.jpg",
-        "FRONT_RIGHT": "images/FRONT_RIGHT.jpg",
-        "LEFT": "images/LEFT.jpg",
-        "RIGHT": "images/RIGHT.jpg"
+        "FRONT": "images/FRONT.webp",
+        "FRONT_LEFT": "images/FRONT_LEFT.webp",
+        "FRONT_RIGHT": "images/FRONT_RIGHT.webp",
+        "LEFT": "images/LEFT.webp",
+        "RIGHT": "images/RIGHT.webp"
       },
       "scaled_files": {
-        "FRONT": "images/FRONT__scaled.jpg",
-        "FRONT_LEFT": "images/FRONT_LEFT__scaled.jpg",
-        "FRONT_RIGHT": "images/FRONT_RIGHT__scaled.jpg",
-        "LEFT": "images/LEFT__scaled.jpg",
-        "RIGHT": "images/RIGHT__scaled.jpg"
+        "FRONT": "images/FRONT__scaled.webp",
+        "FRONT_LEFT": "images/FRONT_LEFT__scaled.webp",
+        "FRONT_RIGHT": "images/FRONT_RIGHT__scaled.webp",
+        "LEFT": "images/LEFT__scaled.webp",
+        "RIGHT": "images/RIGHT__scaled.webp"
+      },
+      "thumb_files": {
+        "FRONT": "images/FRONT__thumb.webp",
+        "FRONT_LEFT": "images/FRONT_LEFT__thumb.webp",
+        "FRONT_RIGHT": "images/FRONT_RIGHT__thumb.webp",
+        "LEFT": "images/LEFT__thumb.webp",
+        "RIGHT": "images/RIGHT__thumb.webp"
       }
     },
     "attention": {
@@ -72,21 +79,21 @@
     "bev": {
       "available": true,
       "images": {
-        "80": "images/bev_gt_80m.jpg",
-        "40": "images/bev_gt_40m.jpg",
-        "20": "images/bev_gt_20m.jpg"
+        "80": "images/bev_gt_80m.webp",
+        "40": "images/bev_gt_40m.webp",
+        "20": "images/bev_gt_20m.webp"
       },
       "source_model": "gt"
     },
     "baked_occ": {
       "available": true,
-      "all_image": "baked_occ/all.png",
+      "all_image": "baked_occ/all.webp",
       "overlays": {
-        "FRONT": "baked_occ/only_FRONT.png",
-        "FRONT_LEFT": "baked_occ/only_FRONT_LEFT.png",
-        "FRONT_RIGHT": "baked_occ/only_FRONT_RIGHT.png",
-        "LEFT": "baked_occ/only_LEFT.png",
-        "RIGHT": "baked_occ/only_RIGHT.png"
+        "FRONT": "baked_occ/only_FRONT.webp",
+        "FRONT_LEFT": "baked_occ/only_FRONT_LEFT.webp",
+        "FRONT_RIGHT": "baked_occ/only_FRONT_RIGHT.webp",
+        "LEFT": "baked_occ/only_LEFT.webp",
+        "RIGHT": "baked_occ/only_RIGHT.webp"
       }
     },
     "meta": {

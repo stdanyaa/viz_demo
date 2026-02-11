@@ -3,23 +3,23 @@
   "images": [
     {
       "name": "FRONT",
-      "url": "../images/FRONT.jpg"
+      "url": "../images/FRONT__thumb.webp"
     },
     {
       "name": "FRONT LEFT",
-      "url": "../images/FRONT_LEFT.jpg"
+      "url": "../images/FRONT_LEFT__thumb.webp"
     },
     {
       "name": "FRONT RIGHT",
-      "url": "../images/FRONT_RIGHT.jpg"
+      "url": "../images/FRONT_RIGHT__thumb.webp"
     },
     {
       "name": "LEFT",
-      "url": "../images/LEFT.jpg"
+      "url": "../images/LEFT__thumb.webp"
     },
     {
       "name": "RIGHT",
-      "url": "../images/RIGHT.jpg"
+      "url": "../images/RIGHT__thumb.webp"
     }
   ],
   "occupancy": {

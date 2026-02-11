@@ -16,20 +16,28 @@
     "images": {
       "available": true,
       "files": {
-        "cam01": "images/cam01.jpg",
-        "cam05": "images/cam05.jpg",
-        "cam06": "images/cam06.jpg",
-        "cam07": "images/cam07.jpg",
-        "cam08": "images/cam08.jpg",
-        "cam09": "images/cam09.jpg"
+        "cam01": "images/cam01.webp",
+        "cam05": "images/cam05.webp",
+        "cam06": "images/cam06.webp",
+        "cam07": "images/cam07.webp",
+        "cam08": "images/cam08.webp",
+        "cam09": "images/cam09.webp"
       },
       "scaled_files": {
-        "cam01": "images/cam01__scaled.jpg",
-        "cam05": "images/cam05__scaled.jpg",
-        "cam06": "images/cam06__scaled.jpg",
-        "cam07": "images/cam07__scaled.jpg",
-        "cam08": "images/cam08__scaled.jpg",
-        "cam09": "images/cam09__scaled.jpg"
+        "cam01": "images/cam01__scaled.webp",
+        "cam05": "images/cam05__scaled.webp",
+        "cam06": "images/cam06__scaled.webp",
+        "cam07": "images/cam07__scaled.webp",
+        "cam08": "images/cam08__scaled.webp",
+        "cam09": "images/cam09__scaled.webp"
+      },
+      "thumb_files": {
+        "cam01": "images/cam01__thumb.webp",
+        "cam05": "images/cam05__thumb.webp",
+        "cam06": "images/cam06__thumb.webp",
+        "cam07": "images/cam07__thumb.webp",
+        "cam08": "images/cam08__thumb.webp",
+        "cam09": "images/cam09__thumb.webp"
       }
     },
     "attention": {
@@ -75,22 +83,22 @@
     "bev": {
       "available": true,
       "images": {
-        "80": "images/bev_gt_80m.jpg",
-        "40": "images/bev_gt_40m.jpg",
-        "20": "images/bev_gt_20m.jpg"
+        "80": "images/bev_gt_80m.webp",
+        "40": "images/bev_gt_40m.webp",
+        "20": "images/bev_gt_20m.webp"
       },
       "source_model": "gt"
     },
     "baked_occ": {
       "available": true,
-      "all_image": "baked_occ/all.png",
+      "all_image": "baked_occ/all.webp",
       "overlays": {
-        "cam01": "baked_occ/only_cam01.png",
-        "cam05": "baked_occ/only_cam05.png",
-        "cam06": "baked_occ/only_cam06.png",
-        "cam07": "baked_occ/only_cam07.png",
-        "cam08": "baked_occ/only_cam08.png",
-        "cam09": "baked_occ/only_cam09.png"
+        "cam01": "baked_occ/only_cam01.webp",
+        "cam05": "baked_occ/only_cam05.webp",
+        "cam06": "baked_occ/only_cam06.webp",
+        "cam07": "baked_occ/only_cam07.webp",
+        "cam08": "baked_occ/only_cam08.webp",
+        "cam09": "baked_occ/only_cam09.webp"
       }
     },
     "meta": {
