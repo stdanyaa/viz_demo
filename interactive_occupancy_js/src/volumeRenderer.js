@@ -7,6 +7,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 import { getTurboColorForHeight, turboColormap } from './utils/turboColormap.js';
 
+const FLIP_LEFT_RIGHT = true;
+
 /**
  * Visualize occupancy data using instanced rendering (memory efficient)
  * 
@@ -21,6 +23,9 @@ function visualizeOccupancyWithCubes(occupancy, gridShape, bounds, threshold = 0
     const [xMin, xMax] = bounds.x;
     const [yMin, yMax] = bounds.y;
     const [zMin, zMax] = bounds.z;
+
+    const zFilterMin = -1.0;
+    const zFilterMax = 3.5;
     
     // Calculate voxel size in world coordinates
     const voxelSizeX = (xMax - xMin) / nx;
@@ -48,9 +53,9 @@ function visualizeOccupancyWithCubes(occupancy, gridShape, bounds, threshold = 0
                     continue;
                 }
                 
-                // Filter Z range: show from -1.0 to 2.5
+                // Filter Z range
                 const worldZ = zMin + (z + 0.5) * voxelSizeZ;
-                if (worldZ < -1.0 || worldZ > 2.5) {
+                if (worldZ < zFilterMin || worldZ > zFilterMax) {
                     continue;
                 }
                 
@@ -84,7 +89,7 @@ function visualizeOccupancyWithCubes(occupancy, gridShape, bounds, threshold = 0
         // Calculate color based on average world Z height of this bin (-1.0 to 2.5 range)
         // Use the first voxel's worldZ to represent this bin
         const avgWorldZ = voxels[0].worldZ;
-        const normalizedHeight = Math.max(0, Math.min(1, (avgWorldZ - (-1.0)) / (2.5 - (-1.0)))); // Map -1.0 to 2.5 range to 0-1
+        const normalizedHeight = Math.max(0, Math.min(1, (avgWorldZ - zFilterMin) / (zFilterMax - zFilterMin)));
         const [r, g, b] = turboColormap(normalizedHeight);
         
         // Create material with height-based color
@@ -256,6 +261,9 @@ export class VolumeRenderer {
             this.occupancyData.bounds,
             0.01 // Lower threshold to show more detail
         );
+        if (FLIP_LEFT_RIGHT) {
+            occupancyGroup.scale.x = -1;
+        }
         
         // Set scene background to dark gray for better visibility
         this.scene.background = new THREE.Color(0x1a1a1a);

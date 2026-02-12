@@ -1,213 +1,116 @@
 /**
- * Main application for interactive occupancy volume viewer
+ * Occupancy-only 3D demo app entrypoint
  */
 
 import { loadOccupancyData } from './dataLoader.js';
-import { OccupancyView } from './components/OccupancyView.js';
+import { Occupancy3DRenderer } from './renderers/Occupancy3DRenderer.js';
+import { DatasetFrameDock } from '../../shared/DatasetFrameDock.js';
 
 class App {
-    static VERSION = '2026-01-23-3d-cachebust';
+  static VERSION = '2026-02-12-occupancy-3d-refresh';
 
-    constructor() {
-        this.occupancyView = null;
-        this.volumeRenderer = null; // optional, loaded dynamically
-        this.loadingElement = null;
-        this.errorElement = null;
-        this.mainContent = null;
-    }
-    
-    async init() {
-        // Get DOM elements
-        this.loadingElement = document.getElementById('loading');
-        this.errorElement = document.getElementById('error');
-        this.mainContent = document.getElementById('main-content');
-        const canvasContainer = document.getElementById('canvas-container');
-        const bevCanvas = document.getElementById('bev-canvas');
-        
-        // Get scene path from URL parameter or use default
-        const urlParams = new URLSearchParams(window.location.search);
-        const scenePath = urlParams.get('scene') || 'data/scenes/occ_av2_(10,23)_400x400x32.json';
-        const mode = (urlParams.get('mode') || '3d').toLowerCase(); // '3d' (default) or '2d'
-        
-        try {
-            // Show loading
-            this.showLoading();
-            
-            // Load occupancy data
-            console.log('Loading occupancy data...');
-            const occupancyData = await loadOccupancyData(scenePath);
-            console.log('Occupancy data loaded:', occupancyData);
-            
-            // Hide loading, show main content
-            this.hideLoading();
-            this.showMainContent();
+  constructor() {
+    this.loadingEl = document.getElementById('loading');
+    this.errorEl = document.getElementById('error');
+    this.errorMsgEl = document.getElementById('error-message');
+    this.mainEl = document.getElementById('main');
+    this.canvas = document.getElementById('gl-canvas');
 
-            // Default: fast 2D BEV view with controls
-            if (mode !== '3d') {
-                this.init2D(canvasContainer, bevCanvas, occupancyData);
-            } else {
-                // Optional: heavier 3D view, loaded dynamically to avoid breaking
-                // browsers that don't support import maps / bare module specifiers.
-                await this.init3D(canvasContainer, occupancyData);
-            }
-            
-        } catch (error) {
-            console.error('Error initializing app:', error);
-            this.showError(error.message);
-        }
-    }
-    
-    init2D(canvasContainer, bevCanvas, occupancyData) {
-        // Ensure the 2D canvas is visible and container is ready
-        if (bevCanvas) bevCanvas.style.display = 'block';
+    this.renderer = null;
+    this.dock = null;
+    this.occRenderOptions = {};
+  }
 
-        this.occupancyView = new OccupancyView(canvasContainer, bevCanvas, occupancyData);
+  async init() {
+    const urlParams = new URLSearchParams(window.location.search);
+    this.occRenderOptions = this._parseOccRenderOptions(urlParams);
 
-        // Wire up controls
-        const viewModeEl = document.getElementById('view-mode');
-        const zSliceEl = document.getElementById('z-slice');
-        const zSliceValueEl = document.getElementById('z-slice-value');
-        const zSliceControlEl = document.getElementById('z-slice-control');
-        const thresholdEl = document.getElementById('threshold');
-        const thresholdValueEl = document.getElementById('threshold-value');
-        const alphaEl = document.getElementById('alpha');
-        const alphaValueEl = document.getElementById('alpha-value');
-        const colormapEl = document.getElementById('colormap');
-
-        const nz = occupancyData.gridShape[2];
-        if (zSliceEl) {
-            zSliceEl.min = '0';
-            zSliceEl.max = String(Math.max(0, nz - 1));
-            zSliceEl.step = '1';
-            zSliceEl.value = String(this.occupancyView.zSlice);
-        }
-
-        const updateZLabel = () => {
-            if (!zSliceValueEl) return;
-            const worldZ = this.occupancyView.getCurrentWorldZ();
-            zSliceValueEl.textContent = `${worldZ.toFixed(2)}m`;
-        };
-
-        const syncSliceVisibility = () => {
-            const isSlice = this.occupancyView.viewMode === 'slice';
-            if (zSliceControlEl) zSliceControlEl.style.display = isSlice ? 'block' : 'none';
-        };
-
-        if (viewModeEl) {
-            viewModeEl.value = this.occupancyView.viewMode;
-            viewModeEl.addEventListener('change', () => {
-                this.occupancyView.setViewMode(viewModeEl.value);
-                syncSliceVisibility();
-            });
-        }
-
-        if (zSliceEl) {
-            zSliceEl.addEventListener('input', () => {
-                this.occupancyView.setZSlice(Number(zSliceEl.value));
-                updateZLabel();
-            });
-        }
-
-        if (thresholdEl) {
-            thresholdEl.value = String(this.occupancyView.threshold);
-            thresholdValueEl && (thresholdValueEl.textContent = Number(thresholdEl.value).toFixed(3));
-            thresholdEl.addEventListener('input', () => {
-                const v = Number(thresholdEl.value);
-                this.occupancyView.setThreshold(v);
-                thresholdValueEl && (thresholdValueEl.textContent = v.toFixed(3));
-            });
-        }
-
-        if (alphaEl) {
-            alphaEl.value = String(this.occupancyView.alpha);
-            alphaValueEl && (alphaValueEl.textContent = Number(alphaEl.value).toFixed(2));
-            alphaEl.addEventListener('input', () => {
-                const v = Number(alphaEl.value);
-                this.occupancyView.setAlpha(v);
-                alphaValueEl && (alphaValueEl.textContent = v.toFixed(2));
-            });
-        }
-
-        if (colormapEl) {
-            colormapEl.value = this.occupancyView.colormap;
-            colormapEl.addEventListener('change', () => {
-                this.occupancyView.setColormap(colormapEl.value);
-            });
-        }
-
-        updateZLabel();
-        syncSliceVisibility();
-        this.occupancyView.render();
+    const dockContainer = document.getElementById('context-dock');
+    if (dockContainer) {
+      this.dock = new DatasetFrameDock(dockContainer, { demoKey: 'occupancy' });
+      await this.dock.init();
     }
 
-    async init3D(canvasContainer, occupancyData) {
-        const bevCanvas = document.getElementById('bev-canvas');
-        if (bevCanvas) bevCanvas.style.display = 'none';
-
-        // Hide the 2D-only controls (still keep sidebar as a hint container)
-        const controls = document.getElementById('controls');
-        if (controls) {
-            controls.innerHTML = `
-                <h2>3D mode</h2>
-                <div class="hint">
-                    3D rendering can be very heavy for dense volumes.
-                    If this freezes, refresh and avoid 3D mode.
-                    <div style="height: 8px"></div>
-                    <div><strong>Keys</strong></div>
-                    <div><code>WASD</code> move, <code>Q/E</code> rotate left/right.</div>
-                </div>
-            `;
-        }
-
-        // Cache-bust so Chrome definitely loads the latest module after edits.
-        const mod = await import(`./volumeRenderer.js?v=${encodeURIComponent(App.VERSION)}`);
-        const { VolumeRenderer } = mod;
-
-        console.log('Initializing volume renderer...');
-        this.volumeRenderer = new VolumeRenderer(canvasContainer, occupancyData);
-        console.log('Volume renderer initialized');
+    let scenePath = urlParams.get('scene');
+    if (scenePath) {
+      this.dock?.setSelectedBySceneUrl(scenePath);
+    } else {
+      const def = this.dock?.getDefaultSceneUrl?.() || null;
+      if (def) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('scene', def);
+        window.history.replaceState({}, '', url.toString());
+        scenePath = def;
+        this.dock?.setSelectedBySceneUrl(def);
+      } else {
+        scenePath = 'data/scenes/occ_av2_(10,23)_400x400x32.json';
+      }
     }
 
-    showLoading() {
-        if (this.loadingElement) {
-            this.loadingElement.classList.remove('hidden');
-        }
-        if (this.mainContent) {
-            this.mainContent.classList.add('hidden');
-        }
-        if (this.errorElement) {
-            this.errorElement.classList.add('hidden');
-        }
+    try {
+      console.log('Occupancy app version:', App.VERSION);
+      this.showLoading();
+      const occupancyData = await loadOccupancyData(scenePath);
+
+      this.hideLoading();
+      this.showMain();
+
+      await new Promise((r) => requestAnimationFrame(r));
+
+      if (this.renderer?.dispose) this.renderer.dispose();
+      this.renderer = new Occupancy3DRenderer(this.canvas, occupancyData, this.occRenderOptions);
+    } catch (err) {
+      console.error(err);
+      this.showError(err?.message || String(err));
     }
-    
-    hideLoading() {
-        if (this.loadingElement) {
-            this.loadingElement.classList.add('hidden');
-        }
-    }
-    
-    showMainContent() {
-        if (this.mainContent) {
-            this.mainContent.classList.remove('hidden');
-        }
-    }
-    
-    showError(message) {
-        if (this.errorElement) {
-            this.errorElement.classList.remove('hidden');
-            const errorMessage = this.errorElement.querySelector('#error-message');
-            if (errorMessage) {
-                errorMessage.textContent = message;
-            }
-        }
-        if (this.loadingElement) {
-            this.loadingElement.classList.add('hidden');
-        }
-    }
+  }
+
+  _parseOccRenderOptions(urlParams) {
+    const readNum = (...keys) => {
+      for (const key of keys) {
+        const raw = urlParams.get(key);
+        if (raw === null || raw === '') continue;
+        const v = Number(raw);
+        if (Number.isFinite(v)) return v;
+      }
+      return undefined;
+    };
+
+    const threshold = readNum('vox_threshold', 'occ_threshold');
+    const zFilterMin = readNum('vox_z_min', 'occ_z_min');
+    const zFilterMax = readNum('vox_z_max', 'occ_z_max');
+    const topLayersRaw = readNum('vox_top_layers', 'occ_top_layers');
+    const dropTopLayers = Number.isFinite(topLayersRaw)
+      ? Math.max(0, Math.floor(topLayersRaw))
+      : undefined;
+
+    const opts = {};
+    if (Number.isFinite(threshold)) opts.threshold = threshold;
+    if (Number.isFinite(zFilterMin)) opts.zFilterMin = zFilterMin;
+    if (Number.isFinite(zFilterMax)) opts.zFilterMax = zFilterMax;
+    if (Number.isFinite(dropTopLayers)) opts.dropTopLayers = dropTopLayers;
+    return opts;
+  }
+
+  showLoading() {
+    this.loadingEl && this.loadingEl.classList.remove('hidden');
+    this.errorEl && this.errorEl.classList.add('hidden');
+    this.mainEl && this.mainEl.classList.add('hidden');
+  }
+  hideLoading() {
+    this.loadingEl && this.loadingEl.classList.add('hidden');
+  }
+  showMain() {
+    this.mainEl && this.mainEl.classList.remove('hidden');
+  }
+  showError(msg) {
+    this.loadingEl && this.loadingEl.classList.add('hidden');
+    this.mainEl && this.mainEl.classList.add('hidden');
+    this.errorEl && this.errorEl.classList.remove('hidden');
+    this.errorMsgEl && (this.errorMsgEl.textContent = msg);
+  }
 }
 
-// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new App();
-    app.init();
+  new App().init();
 });

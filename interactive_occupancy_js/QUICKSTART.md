@@ -1,4 +1,8 @@
-# Quick Start - Occupancy Visualization
+# Quick Start - Occupancy 3D Viewer
+
+This demo is a lightweight, occupancy-only 3D viewer (no 2D controls). It accepts either:
+- Raw occupancy metadata JSON (`grid_shape` + `occupancy_file`), or
+- Compare-style scene manifests with `occupancy.url`.
 
 ## Step 1: Verify Data Files
 
@@ -45,35 +49,42 @@ Open your browser and go to:
 http://localhost:8000
 ```
 
-Or with a specific scene:
+With a specific occupancy JSON:
 ```
 http://localhost:8000?scene=data/scenes/occ_av2_(10,23)_400x400x32.json
 ```
 
-Default is 3D mode (heavier).
+With a compare-style manifest:
 ```
-http://localhost:8000?mode=3d&scene=data/scenes/occ_av2_(10,23)_400x400x32.json
+http://localhost:8000?scene=../artifacts/av2/av2_s01/frame_000121/manifests/compare.scene.json
 ```
 
-## Step 4: Use the Controls
+## Step 4: Debugging Render Options (URL Params)
 
-Once loaded, you'll see:
-- **View Mode**: Switch between "Max Projection", "Mean Projection", or "Z Slice"
-- **Z Slice slider**: (only in slice mode) Navigate through different heights
-- **Threshold**: Filter out low occupancy values
-- **Colormap**: Choose "Turbo" or "Hot" colormap
-- **Alpha**: Adjust transparency
+Use URL params to filter occupancy voxels:
+- `vox_threshold` (or `occ_threshold`)
+- `vox_z_min` (or `occ_z_min`)
+- `vox_z_max` (or `occ_z_max`)
+- `vox_top_layers` (or `occ_top_layers`)
+
+Example:
+```
+http://localhost:8000?scene=data/scenes/occ_av2_(10,23)_400x400x32.json&vox_threshold=0.2&vox_z_min=-1&vox_z_max=2&vox_top_layers=2
+```
+
+## Controls
+
+- Mouse orbit (drag)
+- Scroll zoom
+- `WASD` / arrow keys to move
+- `Q/E` to yaw left/right
 
 ## Troubleshooting
 
 **"Failed to load metadata" error:**
 - Make sure you're running a local server (not opening file:// directly)
-- Check that `data/scenes/occ_av2_(10,23)_400x400x32.json` exists
+- Check that the scene file exists and the URL is correct
 
 **"Failed to load binary file" error:**
-- Check that `data/scenes/occ_av2_(10,23)_400x400x32.bin` exists
-- Make sure the JSON file references the correct binary filename
-
-**Blank screen:**
-- Open browser console (F12) to see error messages
-- Check that all JavaScript files are loading correctly
+- Check that the `.bin` exists next to the `.json`
+- Start the server from `interactive_occupancy_js/` or open `/interactive_occupancy_js/` from the repo root
