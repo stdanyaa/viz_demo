@@ -14,6 +14,7 @@ export class CameraThumbStrip {
    * @param {Object} [options]
    * @param {number} [options.thumbWidth=150]
    * @param {number} [options.thumbHeight=100]
+   * @param {'contain'|'cover'} [options.imageFit='contain']
    * @param {boolean} [options.alwaysPannable=true]
    * @param {number} [options.maxSegments=7]
    */
@@ -24,6 +25,7 @@ export class CameraThumbStrip {
 
     this.thumbWidth = options.thumbWidth !== undefined ? options.thumbWidth : 150;
     this.thumbHeight = options.thumbHeight !== undefined ? options.thumbHeight : 100;
+    this.imageFit = options.imageFit === 'cover' ? 'cover' : 'contain';
 
     this._state = new Map(); // camName -> { image, regions }
     this._main = new Map(); // camName -> { canvas, ctx, labelEl }
@@ -151,8 +153,20 @@ export class CameraThumbStrip {
         return;
       }
 
-      // Scale image to fit thumbnail
-      const scale = Math.min(canvas.width / iw, canvas.height / ih);
+      // Keep a fixed thumbnail height while matching each camera image aspect ratio.
+      // This avoids internal letterbox bars without cropping image content.
+      const targetHeight = this.thumbHeight;
+      const targetWidth = Math.max(1, Math.round((iw / ih) * targetHeight));
+      if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+      }
+
+      // Keep legacy behavior by default; opt-in cover removes side letterboxing.
+      const scale =
+        this.imageFit === 'cover'
+          ? Math.max(canvas.width / iw, canvas.height / ih)
+          : Math.min(canvas.width / iw, canvas.height / ih);
       const width = iw * scale;
       const height = ih * scale;
       const x = (canvas.width - width) / 2;
@@ -198,4 +212,3 @@ export class CameraThumbStrip {
     }
   }
 }
-

@@ -118,8 +118,8 @@ body {
 
 /* Forward-attention strip: make camera canvases larger */
 .camera-strip--forward {
-  height: 460px !important;
-  max-height: 460px !important;
+  height: 290px !important;
+  max-height: 290px !important;
 }
 
 .camera-strip-item {
@@ -131,9 +131,22 @@ body {
 
 .camera-strip--forward .camera-strip-item canvas {
   max-height: none !important;
-  height: 360px !important;
+  height: 220px !important;
   width: auto !important;
   border-radius: 0 !important;
+}
+
+/* Inverse-attention strip: keep a constrained window + aligned rhythm */
+.camera-strip--inverse {
+  max-height: 230px !important;
+  min-height: 0 !important;
+  gap: 8px !important;
+  padding: 4px 0 !important;
+  align-items: flex-start !important;
+}
+
+.camera-strip--inverse .thumbnail-label {
+  padding: 6px 4px !important;
 }
 
 /* ========= Drop-cameras demo ========= */
@@ -262,4 +275,3 @@ header {
   background: transparent !important;
   padding: 10px 12px !important;
 }
-
