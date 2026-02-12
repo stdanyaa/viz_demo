@@ -28,7 +28,7 @@ export class CameraStrip {
             {
                 overlayAlpha: this.overlayAlpha,
                 alwaysPannable: true,
-                maxSegments: 7
+                maxSegments: 3
             }
         );
     }
@@ -54,4 +54,3 @@ export class CameraStrip {
         this._impl.updateOverlaysForQuery(queryIdx, opts);
     }
 }
-
