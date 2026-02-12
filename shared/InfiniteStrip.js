@@ -21,6 +21,7 @@ export class InfiniteStrip {
    * @param {boolean} [options.alwaysPannable=true]
    * @param {boolean} [options.wheelPan=true] map vertical wheel -> horizontal pan
    * @param {number} [options.maxSegments=7] clamp odd number of segments
+   * @param {number} [options.dragThreshold=6] pixels before drag-to-pan starts
    * @param {string} [options.itemClass='infinite-strip-item']
    * @param {string} [options.selectedClass='selected']
    */
@@ -39,6 +40,7 @@ export class InfiniteStrip {
       alwaysPannable: options.alwaysPannable !== undefined ? options.alwaysPannable : true,
       wheelPan: options.wheelPan !== undefined ? options.wheelPan : true,
       maxSegments: options.maxSegments !== undefined ? options.maxSegments : 7,
+      dragThreshold: options.dragThreshold !== undefined ? options.dragThreshold : 6,
       itemClass: options.itemClass || 'infinite-strip-item',
       selectedClass: options.selectedClass || 'selected'
     };
@@ -55,8 +57,11 @@ export class InfiniteStrip {
     this._allEls = []; // all item containers across cycles
 
     this._isPanning = false;
+    this._isPointerDown = false;
     this._panStartX = 0;
     this._panStartScrollLeft = 0;
+    this._activePointerId = null;
+    this._suppressClick = false;
 
     this._onScroll = null;
     this._onResize = null;
@@ -131,7 +136,7 @@ export class InfiniteStrip {
       el.classList.add(this.options.itemClass);
       el.dataset.stripKey = key;
       el.dataset.cycle = "0";
-      if (this.options.onItemClick) el.addEventListener("click", () => this.options.onItemClick(item));
+      if (this.options.onItemClick) el.addEventListener("click", () => this._handleItemClick(item));
       this.options.renderMainItem(el, item);
       this._mainEls.set(key, el);
     }
@@ -149,7 +154,7 @@ export class InfiniteStrip {
           el.classList.add(this.options.itemClass);
           el.dataset.stripKey = key;
           el.dataset.cycle = String(cycle);
-          if (this.options.onItemClick) el.addEventListener("click", () => this.options.onItemClick(item));
+          if (this.options.onItemClick) el.addEventListener("click", () => this._handleItemClick(item));
 
           const mainEl = this._mainEls.get(key) || null;
           if (this.options.renderCloneItem && mainEl) this.options.renderCloneItem(el, item, mainEl);
@@ -226,6 +231,11 @@ export class InfiniteStrip {
     }
   }
 
+  _handleItemClick(item) {
+    if (this._suppressClick) return;
+    if (this.options.onItemClick) this.options.onItemClick(item);
+  }
+
   _installInteraction() {
     // Avoid double-binding if render() is called repeatedly.
     this._removeInteraction();
@@ -249,21 +259,38 @@ export class InfiniteStrip {
       if (!this.options.alwaysPannable) return;
       // Ignore right/middle click drags.
       if (ev.button !== undefined && ev.button !== 0) return;
-      this._isPanning = true;
+      this._isPointerDown = true;
+      this._isPanning = false;
       this._panStartX = ev.clientX;
       this._panStartScrollLeft = this.container.scrollLeft;
-      this.container.setPointerCapture?.(ev.pointerId);
+      this._activePointerId = ev.pointerId ?? null;
     };
     this._onPointerMove = (ev) => {
-      if (!this._isPanning) return;
+      if (!this._isPointerDown) return;
+      if (this._activePointerId !== null && ev.pointerId !== this._activePointerId) return;
       const dx = ev.clientX - this._panStartX;
+      if (!this._isPanning) {
+        if (Math.abs(dx) < this.options.dragThreshold) return;
+        this._isPanning = true;
+        this._suppressClick = true;
+        this.container.setPointerCapture?.(ev.pointerId);
+      }
       this.container.scrollLeft = this._panStartScrollLeft - dx;
       this._wrapIfNeeded();
     };
     this._onPointerUp = (ev) => {
-      if (!this._isPanning) return;
+      if (!this._isPointerDown) return;
+      if (this._activePointerId !== null && ev.pointerId !== this._activePointerId) return;
+      const wasPanning = this._isPanning;
+      this._isPointerDown = false;
       this._isPanning = false;
-      this.container.releasePointerCapture?.(ev.pointerId);
+      if (wasPanning) {
+        this.container.releasePointerCapture?.(ev.pointerId);
+        // Click often fires after drag end; suppress once.
+        this._suppressClick = true;
+        setTimeout(() => { this._suppressClick = false; }, 0);
+      }
+      this._activePointerId = null;
     };
 
     this.container.addEventListener('pointerdown', this._onPointerDown);
@@ -299,4 +326,3 @@ export class InfiniteStrip {
     this._onWheel = null;
   }
 }
-
