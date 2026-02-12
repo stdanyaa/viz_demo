@@ -297,6 +297,13 @@
                 </em></p>
               </div>
               <div class="demo-subsection__actions">
+                <button class="button is-small is-dark demo-toggle" type="button"
+                        data-demo-toggle aria-expanded="false" aria-controls="demo-compare-iframe">
+                  <span class="demo-toggle__label">Show demo</span>
+                  <svg class="demo-toggle__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
                 <a class="button is-small is-dark" target="_blank" rel="noopener"
                    href="./interactive_compare_js/index.html">Open fullscreen</a>
               </div>
@@ -304,13 +311,15 @@
             </div>
           </div>
         </div>
-        <div class="demo-embed">
+        <div class="demo-embed" data-demo-shell data-state="collapsed">
           <iframe
+            id="demo-compare-iframe"
             title="Compare: occupancy vs point cloud"
             loading="lazy"
             allow="fullscreen"
             referrerpolicy="no-referrer"
-            src="./interactive_compare_js/index.html"></iframe>
+            data-src="./interactive_compare_js/index.html"
+            hidden></iframe>
         </div>
       </section>
 
@@ -330,6 +339,13 @@
                 </em></p>
               </div>
               <div class="demo-subsection__actions">
+                <button class="button is-small is-dark demo-toggle" type="button"
+                        data-demo-toggle aria-expanded="false" aria-controls="demo-drop-cameras-iframe">
+                  <span class="demo-toggle__label">Show demo</span>
+                  <svg class="demo-toggle__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
                 <a class="button is-small is-dark" target="_blank" rel="noopener"
                    href="./interactive_dropcameras_js/index.html">Open fullscreen</a>
               </div>
@@ -337,13 +353,15 @@
             </div>
           </div>
         </div>
-        <div class="demo-embed demo-embed--tall">
+        <div class="demo-embed demo-embed--tall" data-demo-shell data-state="collapsed">
           <iframe
+            id="demo-drop-cameras-iframe"
             title="Drop cameras"
             loading="lazy"
             allow="fullscreen"
             referrerpolicy="no-referrer"
-            src="./interactive_dropcameras_js/index.html"></iframe>
+            data-src="./interactive_dropcameras_js/index.html"
+            hidden></iframe>
         </div>
       </section>
 
@@ -363,6 +381,13 @@
                 </em></p>
               </div>
               <div class="demo-subsection__actions">
+                <button class="button is-small is-dark demo-toggle" type="button"
+                        data-demo-toggle aria-expanded="false" aria-controls="demo-forward-attention-iframe">
+                  <span class="demo-toggle__label">Show demo</span>
+                  <svg class="demo-toggle__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
                 <a class="button is-small is-dark" target="_blank" rel="noopener"
                    href="./interactive_forwardattention_js/index.html">Open fullscreen</a>
               </div>
@@ -370,13 +395,15 @@
             </div>
           </div>
         </div>
-        <div class="demo-embed">
+        <div class="demo-embed" data-demo-shell data-state="collapsed">
           <iframe
+            id="demo-forward-attention-iframe"
             title="Forward attention visualization"
             loading="lazy"
             allow="fullscreen"
             referrerpolicy="no-referrer"
-            src="./interactive_forwardattention_js/index.html"></iframe>
+            data-src="./interactive_forwardattention_js/index.html"
+            hidden></iframe>
         </div>
       </section>
 
@@ -396,6 +423,13 @@
                 </em></p>
               </div>
               <div class="demo-subsection__actions">
+                <button class="button is-small is-dark demo-toggle" type="button"
+                        data-demo-toggle aria-expanded="false" aria-controls="demo-inverse-attention-iframe">
+                  <span class="demo-toggle__label">Show demo</span>
+                  <svg class="demo-toggle__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
                 <a class="button is-small is-dark" target="_blank" rel="noopener"
                    href="./interactive_invattention_js/index.html">Open fullscreen</a>
               </div>
@@ -403,13 +437,15 @@
             </div>
           </div>
         </div>
-        <div class="demo-embed">
+        <div class="demo-embed" data-demo-shell data-state="collapsed">
           <iframe
+            id="demo-inverse-attention-iframe"
             title="Inverse attention visualization"
             loading="lazy"
             allow="fullscreen"
             referrerpolicy="no-referrer"
-            src="./interactive_invattention_js/index.html"></iframe>
+            data-src="./interactive_invattention_js/index.html"
+            hidden></iframe>
         </div>
       </section>
     </div>

@@ -313,6 +313,26 @@ body {
 
 .demo-subsection__actions {
   margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.demo-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.demo-toggle__icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  transition: transform 0.2s ease;
+}
+
+[data-demo-toggle][aria-expanded="true"] .demo-toggle__icon {
+  transform: rotate(180deg);
 }
 
 .demo-card {
@@ -359,6 +379,10 @@ body {
   height: auto;
   min-height: 760px;
   background: #0b0b0b; /* avoids white flash while iframe loads */
+}
+
+.demo-embed[data-state="collapsed"] {
+  display: none;
 }
 
 .demo-embed--tall {
@@ -907,6 +931,5 @@ a:focus {
     box-shadow: none !important;
   }
 }
-
 
 

@@ -21,6 +21,85 @@ window.HELP_IMPROVE_VIDEOJS = false;
     });
 })();
 
+// Load/unload interactive demos on toggle to balance quick access and performance.
+(function setupDemoToggle() {
+    const buttons = document.querySelectorAll('[data-demo-toggle]');
+    if (!buttons.length) return;
+
+    const resolveSrc = (iframe) => {
+        const src = iframe?.dataset?.src;
+        if (!src) return null;
+        try {
+            return new URL(src, window.location.href).toString();
+        } catch (err) {
+            return src;
+        }
+    };
+
+    for (const button of buttons) {
+        const targetId = button.getAttribute('aria-controls');
+        if (!targetId) continue;
+        const iframe = document.getElementById(targetId);
+        if (!iframe) continue;
+        const shell = iframe.closest('[data-demo-shell]');
+        const labelEl = button.querySelector('.demo-toggle__label');
+
+        const setLabel = (text) => {
+            if (labelEl) {
+                labelEl.textContent = text;
+            } else {
+                button.textContent = text;
+            }
+        };
+
+        // Ensure initial collapsed state.
+        button.setAttribute('aria-expanded', 'false');
+        if (shell) shell.dataset.state = 'collapsed';
+        iframe.hidden = true;
+
+        button.addEventListener('click', function() {
+            const expanded = button.getAttribute('aria-expanded') === 'true';
+            if (!expanded) {
+                const targetSrc = resolveSrc(iframe);
+                if (!targetSrc) return;
+                button.setAttribute('aria-expanded', 'true');
+                if (shell) shell.dataset.state = 'loading';
+                setLabel('Loading...');
+                iframe.hidden = false;
+
+                const onLoad = () => {
+                    if (button.getAttribute('aria-expanded') !== 'true') return;
+                    if (shell) shell.dataset.state = 'loaded';
+                    setLabel('Hide demo');
+                };
+
+                const onError = () => {
+                    if (button.getAttribute('aria-expanded') !== 'true') return;
+                    if (shell) shell.dataset.state = 'collapsed';
+                    button.setAttribute('aria-expanded', 'false');
+                    setLabel('Show demo');
+                    iframe.hidden = true;
+                    iframe.src = 'about:blank';
+                };
+
+                iframe.addEventListener('load', onLoad, { once: true });
+                iframe.addEventListener('error', onError, { once: true });
+                iframe.src = targetSrc;
+                return;
+            }
+
+            button.setAttribute('aria-expanded', 'false');
+            setLabel('Show demo');
+            if (shell) shell.dataset.state = 'collapsed';
+            iframe.hidden = true;
+            iframe.src = 'about:blank';
+            iframe.style.height = '';
+            const wrap = iframe.closest('.demo-embed');
+            if (wrap) wrap.style.height = '';
+        });
+    }
+})();
+
 // More Works Dropdown Functionality
 function toggleMoreWorks() {
     const dropdown = document.getElementById('moreWorksDropdown');
