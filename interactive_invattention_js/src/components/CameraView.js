@@ -31,7 +31,8 @@ export class CameraView {
         this.isDragging = false;
         this.dragStart = null;
         this.dragEnd = null;
-        
+        this.activePointerId = null;
+
         this.setupEventListeners();
     }
     
@@ -39,57 +40,71 @@ export class CameraView {
      * Setup event listeners for drag-to-select
      */
     setupEventListeners() {
-        // Mouse events for drag selection
-        this.canvas.addEventListener('mousedown', (e) => {
+        // Touch-first pointer interaction for drag-to-select on mobile and desktop.
+        this.canvas.style.touchAction = 'none';
+
+        this.canvas.addEventListener('pointerdown', (e) => {
             if (!this.currentImage) return;
+            if (e.button !== undefined && e.button !== 0) return;
 
             const { x, y } = this._eventToCanvasXY(e);
-            
+            this.activePointerId = e.pointerId ?? null;
             this.isDragging = true;
             this.dragStart = { x, y };
             this.dragEnd = { x, y };
+            this.canvas.setPointerCapture?.(e.pointerId);
+            e.preventDefault();
             this.render();
         });
-        
-        this.canvas.addEventListener('mousemove', (e) => {
-            if (!this.isDragging) return;
 
-            const { x, y } = this._eventToCanvasXY(e);
-            
-            this.dragEnd = { x, y };
-            this.render();
-        });
-        
-        this.canvas.addEventListener('mouseup', (e) => {
+        this.canvas.addEventListener('pointermove', (e) => {
             if (!this.isDragging) return;
+            if (this.activePointerId !== null && e.pointerId !== this.activePointerId) return;
 
             const { x, y } = this._eventToCanvasXY(e);
             this.dragEnd = { x, y };
-            
-            // Finalize selection
+            e.preventDefault();
+            this.render();
+        });
+
+        const finishDrag = (e) => {
+            if (!this.isDragging) return;
+            if (this.activePointerId !== null && e.pointerId !== this.activePointerId) return;
+
+            const { x, y } = this._eventToCanvasXY(e);
+            this.dragEnd = { x, y };
+
+            // Finalize selection.
             const x1 = Math.min(this.dragStart.x, this.dragEnd.x);
             const x2 = Math.max(this.dragStart.x, this.dragEnd.x);
             const y1 = Math.min(this.dragStart.y, this.dragEnd.y);
             const y2 = Math.max(this.dragStart.y, this.dragEnd.y);
-            
-            // Only add if selection is large enough
-            if (Math.abs(x2 - x1) > 10 && Math.abs(y2 - y1) > 10) {
+
+            // Lower threshold to make finger drag easier on phones.
+            if (Math.abs(x2 - x1) > 6 && Math.abs(y2 - y1) > 6) {
                 this.addRegion([x1, x2], [y1, y2]);
             }
-            
+
+            this.canvas.releasePointerCapture?.(e.pointerId);
             this.isDragging = false;
             this.dragStart = null;
             this.dragEnd = null;
+            this.activePointerId = null;
+            e.preventDefault();
             this.render();
-        });
-        
-        this.canvas.addEventListener('mouseleave', () => {
-            if (this.isDragging) {
-                this.isDragging = false;
-                this.dragStart = null;
-                this.dragEnd = null;
-                this.render();
-            }
+        };
+
+        this.canvas.addEventListener('pointerup', finishDrag);
+        this.canvas.addEventListener('pointercancel', finishDrag);
+        this.canvas.addEventListener('pointerleave', (e) => {
+            // Keep drag active when pointer is captured; otherwise cancel.
+            if (!this.isDragging) return;
+            if (this.canvas.hasPointerCapture?.(e.pointerId)) return;
+            this.isDragging = false;
+            this.dragStart = null;
+            this.dragEnd = null;
+            this.activePointerId = null;
+            this.render();
         });
     }
 

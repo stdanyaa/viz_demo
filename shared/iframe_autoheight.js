@@ -15,19 +15,15 @@ function measureHeight() {
 function clampHeight(h) {
   const raw = Number(h);
   if (!Number.isFinite(raw) || raw <= 0) return 0;
-
-  const viewport = Math.max(
-    Number(window.visualViewport?.height || 0),
-    Number(window.innerHeight || 0)
-  );
-  if (!Number.isFinite(viewport) || viewport <= 0) return Math.round(raw);
-
-  const cap = Math.max(320, Math.floor(viewport * 1.25));
+  // Keep only a broad safety bound; do not cap near viewport height,
+  // otherwise taller demos get clipped on mobile.
+  const cap = 12000;
   return Math.max(200, Math.min(Math.round(raw), cap));
 }
 
 let lastSent = 0;
 let rafId = null;
+let warmupTimer = null;
 function sendHeightSoon() {
   if (rafId != null) return;
   rafId = requestAnimationFrame(() => {
@@ -45,10 +41,44 @@ function sendHeightSoon() {
   });
 }
 
+function startWarmupPings(durationMs = 8000, periodMs = 250) {
+  if (warmupTimer != null) {
+    clearInterval(warmupTimer);
+    warmupTimer = null;
+  }
+  const maxTicks = Math.max(1, Math.ceil(durationMs / periodMs));
+  let ticks = 0;
+  warmupTimer = setInterval(() => {
+    ticks += 1;
+    sendHeightSoon();
+    if (ticks >= maxTicks) {
+      clearInterval(warmupTimer);
+      warmupTimer = null;
+    }
+  }, periodMs);
+}
+
 // Initial + reactive updates
-window.addEventListener("load", sendHeightSoon);
+window.addEventListener("load", () => {
+  sendHeightSoon();
+  startWarmupPings();
+});
 window.addEventListener("resize", sendHeightSoon);
-document.addEventListener("DOMContentLoaded", sendHeightSoon);
+window.addEventListener("orientationchange", () => {
+  sendHeightSoon();
+  startWarmupPings(3000, 250);
+});
+window.addEventListener("pageshow", () => {
+  sendHeightSoon();
+  startWarmupPings(3000, 250);
+});
+document.addEventListener("DOMContentLoaded", () => {
+  sendHeightSoon();
+  startWarmupPings();
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") sendHeightSoon();
+});
 
 if ("ResizeObserver" in window) {
   const ro = new ResizeObserver(() => sendHeightSoon());

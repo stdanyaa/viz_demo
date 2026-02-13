@@ -6,10 +6,10 @@ window.HELP_IMPROVE_VIDEOJS = false;
     const clampIframeHeight = (rawHeight, wrap) => {
         const isTall = !!wrap?.classList?.contains('demo-embed--tall');
         const minHeight = isTall ? 380 : 320;
-        const scale = isTall ? 1.75 : 1.35;
-        const viewportCap = Math.max(minHeight, Math.floor((window.innerHeight || 0) * scale));
         const h = Math.round(rawHeight);
-        return Math.max(minHeight, Math.min(h, viewportCap));
+        // Keep only a broad safety cap so iframe demos can grow naturally.
+        const maxHeight = 12000;
+        return Math.max(minHeight, Math.min(h, maxHeight));
     };
 
     window.addEventListener('message', function(ev) {
