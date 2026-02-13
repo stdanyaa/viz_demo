@@ -4,10 +4,10 @@
  * - bottom: shared-controls multi-view (occupancy + 1-2 point clouds)
  */
 
-import { loadCompareScene } from './sceneLoader.js?v=2026-02-11-bitset-fix2';
+import { loadCompareScene } from './sceneLoader.js?v=2026-02-13-layout-fix1';
 import { ImageStrip } from '../../shared/ImageStrip.js';
-import { loadPointCloudData } from './loaders/pointCloudLoader.js?v=2026-02-11-bitset-fix2';
-import { CompareMultiViewRenderer } from './renderers/CompareMultiViewRenderer.js?v=2026-02-11-bitset-fix2';
+import { loadPointCloudData } from './loaders/pointCloudLoader.js?v=2026-02-13-layout-fix1';
+import { CompareMultiViewRenderer } from './renderers/CompareMultiViewRenderer.js?v=2026-02-13-layout-fix1';
 import { DatasetFrameDock } from '../../shared/DatasetFrameDock.js';
 import { orderCameraItemsForUi } from '../../shared/cameraOrder.js';
 
@@ -42,9 +42,11 @@ class App {
     this.pcOptions = [];
     this.pcCacheByUrl = new Map(); // url -> pointcloudData
     this.occRenderOptions = {};
+    this._cleanupViewportSizing = null;
   }
 
   async init() {
+    this._installViewportSizing();
     const urlParams = new URLSearchParams(window.location.search);
     this.occRenderOptions = this._parseOccRenderOptions(urlParams);
     const dockContainer = document.getElementById('context-dock');
@@ -250,6 +252,42 @@ class App {
     if (Number.isFinite(zFilterMax)) opts.zFilterMax = zFilterMax;
     if (Number.isFinite(dropTopLayers)) opts.dropTopLayers = dropTopLayers;
     return opts;
+  }
+
+  _installViewportSizing() {
+    if (this._cleanupViewportSizing) return;
+
+    let raf = 0;
+    const apply = () => {
+      raf = 0;
+      const vvHeight = window.visualViewport?.height || 0;
+      const rawHeight = vvHeight > 0 ? vvHeight : window.innerHeight;
+      const clamped = Math.max(320, Math.floor(rawHeight || 0));
+      if (!clamped) return;
+      document.documentElement.style.setProperty('--app-vh', `${clamped}px`);
+    };
+
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(apply);
+    };
+
+    const onWindowResize = () => schedule();
+    const onViewportResize = () => schedule();
+    const vv = window.visualViewport || null;
+
+    window.addEventListener('resize', onWindowResize, { passive: true });
+    vv?.addEventListener('resize', onViewportResize, { passive: true });
+    vv?.addEventListener('scroll', onViewportResize, { passive: true });
+    apply();
+
+    this._cleanupViewportSizing = () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onWindowResize);
+      vv?.removeEventListener('resize', onViewportResize);
+      vv?.removeEventListener('scroll', onViewportResize);
+      this._cleanupViewportSizing = null;
+    };
   }
 
   _applyPaneMode(panes) {

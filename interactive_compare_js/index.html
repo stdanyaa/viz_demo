@@ -5,17 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Compare: Occupancy vs Point Cloud</title>
   <style>
+    :root {
+      --app-vh: 100vh;
+    }
+    html {
+      width: 100%;
+      height: var(--app-vh);
+      overflow: hidden;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       background: #1a1a1a;
       color: #ffffff;
       overflow: hidden;
+      width: 100%;
+      height: var(--app-vh);
+      min-width: 0;
     }
 
     #loading, #error {
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -34,11 +45,13 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     #main {
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       display: grid;
-      /* Keep 3D canvases stable: top row has a floor. */
-      grid-template-rows: minmax(360px, 55vh) 1fr;
+      /* Keep 3D canvases stable: top row has a floor, but avoid runaway heights. */
+      grid-template-rows: minmax(240px, clamp(280px, calc(var(--app-vh) * 0.46), 460px)) minmax(220px, 1fr);
+      min-width: 0;
+      overflow: hidden;
     }
     #main.hidden { display: none; }
 
@@ -54,6 +67,8 @@
       contain: layout paint;
       position: relative;
       z-index: 2;
+      min-height: 0;
+      min-width: 0;
     }
 
     #controls-bar {
@@ -120,7 +135,8 @@
       background: rgba(0,0,0,0.25);
       align-items: center;
       flex: 1 1 auto;
-      min-height: 210px;
+      min-height: 170px;
+      min-width: 0;
     }
     .thumb {
       flex: 0 0 auto;
@@ -161,17 +177,30 @@
     /* Bottom pane: two canvases (more robust than scissor split) */
     #bottom-pane {
       position: relative;
+      width: 100%;
       overflow: hidden;
       contain: layout paint;
       z-index: 1;
+      min-height: 0;
+      min-width: 0;
     }
     #bottom-split {
       position: absolute;
       inset: 0;
       display: grid;
-      grid-template-columns: repeat(var(--pane-count, 2), 1fr);
+      width: 100%;
+      height: 100%;
+      grid-template-columns: repeat(var(--pane-count, 2), minmax(0, 1fr));
+      min-height: 0;
+      min-width: 0;
     }
-    #gl-canvas-left, #gl-canvas-right, #gl-canvas-third { width: 100%; height: 100%; display: block; }
+    #gl-canvas-left, #gl-canvas-right, #gl-canvas-third {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      min-width: 0;
+      display: block;
+    }
     .hidden { display: none !important; }
     #viewport-labels {
       position: absolute;
@@ -179,11 +208,12 @@
       top: 10px;
       right: 12px;
       display: grid;
-      grid-template-columns: repeat(var(--pane-count, 2), 1fr);
+      grid-template-columns: repeat(var(--pane-count, 2), minmax(0, 1fr));
       gap: 10px;
       pointer-events: none;
       font-size: 0.85rem;
       color: #d6d6d6;
+      min-width: 0;
     }
     /* NOTE: shared iframe CSS overrides `.tag` for compare demo.
        Use higher specificity + !important so our pills are truly opaque. */
@@ -239,6 +269,15 @@
       pointer-events: none;
     }
     code { color: #9fd0ff; }
+
+    @media (max-width: 980px) {
+      #main {
+        grid-template-rows: minmax(190px, clamp(220px, calc(var(--app-vh) * 0.42), 340px)) minmax(180px, 1fr);
+      }
+      #thumb-strip {
+        min-height: 136px;
+      }
+    }
 
   </style>
   <link rel="stylesheet" href="../shared/iframe_theme.css">
@@ -300,8 +339,8 @@
   }
   </script>
 
-  <!-- Cache-bust (bitset occupancy decode fix) -->
-  <script type="module" src="src/app.js?v=2026-02-11-bitset-fix2"></script>
-  <script type="module" src="../shared/iframe_autoheight.js"></script>
+  <!-- Cache-bust -->
+  <script type="module" src="src/app.js?v=2026-02-13-layout-fix1"></script>
+  <script type="module" src="../shared/iframe_autoheight.js?v=2026-02-13-layout-fix1"></script>
 </body>
 </html>

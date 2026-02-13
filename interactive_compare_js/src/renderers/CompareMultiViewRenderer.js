@@ -10,6 +10,28 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/exampl
 import { turboColormap, normalizeHeight } from '../utils/turboColormap.js';
 
 const FLIP_LEFT_RIGHT = true;
+const MAX_DEVICE_PIXEL_RATIO = 2;
+
+function getSafeDevicePixelRatio() {
+  const dpr = Number(window.devicePixelRatio || 1);
+  if (!Number.isFinite(dpr) || dpr <= 0) return 1;
+  return Math.min(dpr, MAX_DEVICE_PIXEL_RATIO);
+}
+
+function disposeObject3DTree(root) {
+  if (!root || typeof root.traverse !== 'function') return;
+  root.traverse((node) => {
+    if (node.geometry && typeof node.geometry.dispose === 'function') {
+      node.geometry.dispose();
+    }
+    if (node.material) {
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      mats.forEach((mat) => {
+        if (mat && typeof mat.dispose === 'function') mat.dispose();
+      });
+    }
+  });
+}
 
 function sizeCanvasRenderer(renderer, canvas) {
   const rect = canvas.getBoundingClientRect();
@@ -206,6 +228,7 @@ export class CompareMultiViewRenderer {
     this.animationId = null;
     this._resizeObserver = null;
     this._resizeRaf = 0;
+    this._onWindowResize = null;
     this._lastCssSizes = { occW: 0, occH: 0, pc0W: 0, pc0H: 0, pc1W: 0, pc1H: 0 };
 
     this.moveSpeed = 0.5;
@@ -233,7 +256,7 @@ export class CompareMultiViewRenderer {
       alpha: false,
       powerPreference: 'high-performance',
     });
-    this.rendererOcc.setPixelRatio(window.devicePixelRatio || 1);
+    this.rendererOcc.setPixelRatio(getSafeDevicePixelRatio());
     this.rendererOcc.setClearColor(0x1a1a1a, 1.0);
 
     this.rendererPc[0] = new THREE.WebGLRenderer({
@@ -242,7 +265,7 @@ export class CompareMultiViewRenderer {
       alpha: false,
       powerPreference: 'high-performance',
     });
-    this.rendererPc[0].setPixelRatio(window.devicePixelRatio || 1);
+    this.rendererPc[0].setPixelRatio(getSafeDevicePixelRatio());
     this.rendererPc[0].setClearColor(0x1a1a1a, 1.0);
 
     // pcB is optional (3-pane mode). If missing/null, we just skip it.
@@ -253,7 +276,7 @@ export class CompareMultiViewRenderer {
         alpha: false,
         powerPreference: 'high-performance',
       });
-      this.rendererPc[1].setPixelRatio(window.devicePixelRatio || 1);
+      this.rendererPc[1].setPixelRatio(getSafeDevicePixelRatio());
       this.rendererPc[1].setClearColor(0x1a1a1a, 1.0);
     }
 
@@ -331,7 +354,8 @@ export class CompareMultiViewRenderer {
     window.addEventListener('keydown', this.handleKeyDown);
     window.addEventListener('keyup', this.handleKeyUp);
 
-    window.addEventListener('resize', () => this.onResize());
+    this._onWindowResize = () => this.onResize();
+    window.addEventListener('resize', this._onWindowResize, { passive: true });
     this._installResizeObserver();
     this.onResize();
     this.animate();
@@ -340,14 +364,42 @@ export class CompareMultiViewRenderer {
   dispose() {
     if (this.animationId) cancelAnimationFrame(this.animationId);
     this.animationId = null;
+    if (this._resizeRaf) cancelAnimationFrame(this._resizeRaf);
+    this._resizeRaf = 0;
 
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
+    if (this._onWindowResize) {
+      window.removeEventListener('resize', this._onWindowResize);
+      this._onWindowResize = null;
+    }
 
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
       this._resizeObserver = null;
     }
+
+    this.controls?.dispose?.();
+    this.controls = null;
+
+    this.pcObjects.forEach((obj, idx) => {
+      if (!obj) return;
+      this.scenePc[idx]?.remove?.(obj);
+      disposeObject3DTree(obj);
+      this.pcObjects[idx] = null;
+    });
+    disposeObject3DTree(this.sceneOcc);
+    disposeObject3DTree(this.scenePc[0]);
+    disposeObject3DTree(this.scenePc[1]);
+
+    const renderers = [this.rendererOcc, this.rendererPc[0], this.rendererPc[1]];
+    renderers.forEach((renderer) => {
+      if (!renderer) return;
+      renderer.dispose?.();
+      renderer.forceContextLoss?.();
+    });
+    this.rendererOcc = null;
+    this.rendererPc = [null, null];
   }
 
   setPointCloud(viewIndex, pcData) {
