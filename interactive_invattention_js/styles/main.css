@@ -27,7 +27,7 @@ body {
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
-    min-height: 100vh;
+    min-height: 0;
 }
 
 html,
@@ -164,7 +164,18 @@ header p {
     margin: 0 auto;
 }
 
-@media (max-width: 900px) {
+/* Override compact iframe defaults with slightly larger spacing. */
+#main-content .main-layout {
+    gap: 16px !important;
+    padding: 16px !important;
+}
+
+#main-content .camera-view,
+#main-content .bev-view {
+    padding: 10px !important;
+}
+
+@media (max-width: 820px) {
     .main-layout {
         grid-template-columns: 1fr;
     }
