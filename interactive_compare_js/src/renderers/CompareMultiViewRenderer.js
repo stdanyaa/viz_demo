@@ -10,12 +10,21 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/exampl
 import { turboColormap, normalizeHeight } from '../utils/turboColormap.js';
 
 const FLIP_LEFT_RIGHT = true;
-const MAX_DEVICE_PIXEL_RATIO = 2;
+const DEFAULT_MAX_IDLE_DEVICE_PIXEL_RATIO = 2;
+const DEFAULT_ACTIVE_PIXEL_RATIO = 1;
+const DEFAULT_INTERACTION_HOLD_MS = 180;
 
-function getSafeDevicePixelRatio() {
+function clampPositive(value, fallback, min = 0.5, max = 4) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num <= 0) return fallback;
+  return Math.min(max, Math.max(min, num));
+}
+
+function getSafeDevicePixelRatio(maxDevicePixelRatio = DEFAULT_MAX_IDLE_DEVICE_PIXEL_RATIO) {
   const dpr = Number(window.devicePixelRatio || 1);
-  if (!Number.isFinite(dpr) || dpr <= 0) return 1;
-  return Math.min(dpr, MAX_DEVICE_PIXEL_RATIO);
+  const safeDeviceDpr = Number.isFinite(dpr) && dpr > 0 ? dpr : 1;
+  const safeMax = clampPositive(maxDevicePixelRatio, DEFAULT_MAX_IDLE_DEVICE_PIXEL_RATIO);
+  return Math.min(safeDeviceDpr, safeMax);
 }
 
 function disposeObject3DTree(root) {
@@ -209,10 +218,11 @@ function buildPointCloud(points, count, bounds, opts = {}) {
 }
 
 export class CompareMultiViewRenderer {
-  constructor(canvases, occupancyData, pointCloudDatas = [], occRenderOptions = {}) {
+  constructor(canvases, occupancyData, pointCloudDatas = [], occRenderOptions = {}, perfOptions = {}) {
     this.canvases = canvases; // { occ, pcA, pcB }
     this.occ = occupancyData;
     this.occRenderOptions = occRenderOptions;
+    this.perfOptions = perfOptions;
 
     this.rendererOcc = null;
     this.rendererPc = [null, null];
@@ -230,6 +240,41 @@ export class CompareMultiViewRenderer {
     this._resizeRaf = 0;
     this._onWindowResize = null;
     this._lastCssSizes = { occW: 0, occH: 0, pc0W: 0, pc0H: 0, pc1W: 0, pc1H: 0 };
+    this._currentPixelRatio = null;
+    this._lastInteractionTs = 0;
+    this._isPointerInteracting = false;
+    this._onControlsStart = null;
+    this._onControlsChange = null;
+    this._onControlsEnd = null;
+
+    const maxDevicePixelRatio = clampPositive(
+      this.perfOptions.maxDevicePixelRatio,
+      DEFAULT_MAX_IDLE_DEVICE_PIXEL_RATIO
+    );
+    const deviceCappedDpr = getSafeDevicePixelRatio(maxDevicePixelRatio);
+    const fixedPixelRatio = clampPositive(this.perfOptions.fixedPixelRatio, NaN);
+    const requestedIdlePixelRatio = clampPositive(this.perfOptions.idlePixelRatio, NaN);
+    const requestedActivePixelRatio = clampPositive(this.perfOptions.activePixelRatio, NaN);
+
+    if (Number.isFinite(fixedPixelRatio)) {
+      const forced = Math.min(deviceCappedDpr, fixedPixelRatio);
+      this._idlePixelRatio = forced;
+      this._activePixelRatio = forced;
+    } else {
+      const idle = Number.isFinite(requestedIdlePixelRatio)
+        ? Math.min(deviceCappedDpr, requestedIdlePixelRatio)
+        : deviceCappedDpr;
+      const activeDefault = Math.min(idle, DEFAULT_ACTIVE_PIXEL_RATIO);
+      const active = Number.isFinite(requestedActivePixelRatio)
+        ? Math.min(idle, requestedActivePixelRatio)
+        : activeDefault;
+      this._idlePixelRatio = idle;
+      this._activePixelRatio = active;
+    }
+    const holdMs = Number(this.perfOptions.interactionHoldMs);
+    this._interactionHoldMs = Number.isFinite(holdMs)
+      ? Math.max(0, Math.floor(holdMs))
+      : DEFAULT_INTERACTION_HOLD_MS;
 
     this.moveSpeed = 0.5;
     this.rotateSpeed = 0.02;
@@ -256,7 +301,6 @@ export class CompareMultiViewRenderer {
       alpha: false,
       powerPreference: 'high-performance',
     });
-    this.rendererOcc.setPixelRatio(getSafeDevicePixelRatio());
     this.rendererOcc.setClearColor(0x1a1a1a, 1.0);
 
     this.rendererPc[0] = new THREE.WebGLRenderer({
@@ -265,7 +309,6 @@ export class CompareMultiViewRenderer {
       alpha: false,
       powerPreference: 'high-performance',
     });
-    this.rendererPc[0].setPixelRatio(getSafeDevicePixelRatio());
     this.rendererPc[0].setClearColor(0x1a1a1a, 1.0);
 
     // pcB is optional (3-pane mode). If missing/null, we just skip it.
@@ -276,9 +319,9 @@ export class CompareMultiViewRenderer {
         alpha: false,
         powerPreference: 'high-performance',
       });
-      this.rendererPc[1].setPixelRatio(getSafeDevicePixelRatio());
       this.rendererPc[1].setClearColor(0x1a1a1a, 1.0);
     }
+    this._applyPixelRatio(this._idlePixelRatio, false);
 
     this.sceneOcc.background = new THREE.Color(0x1a1a1a);
     this.scenePc[0].background = new THREE.Color(0x1a1a1a);
@@ -318,6 +361,18 @@ export class CompareMultiViewRenderer {
     this.controls.maxAzimuthAngle = Infinity;
     this.controls.minPolarAngle = 0;
     this.controls.maxPolarAngle = Math.PI;
+    this._onControlsStart = () => {
+      this._isPointerInteracting = true;
+      this._markInteraction();
+    };
+    this._onControlsChange = () => this._markInteraction();
+    this._onControlsEnd = () => {
+      this._isPointerInteracting = false;
+      this._markInteraction();
+    };
+    this.controls.addEventListener('start', this._onControlsStart);
+    this.controls.addEventListener('change', this._onControlsChange);
+    this.controls.addEventListener('end', this._onControlsEnd);
 
     // Build occupancy scene
     const occGroup = visualizeOccupancyWithCubes(
@@ -341,6 +396,7 @@ export class CompareMultiViewRenderer {
       const key = event.code || event.key;
       if (key in this.keys) {
         this.keys[key] = true;
+        this._markInteraction();
         event.preventDefault();
       }
     };
@@ -348,6 +404,7 @@ export class CompareMultiViewRenderer {
       const key = event.code || event.key;
       if (key in this.keys) {
         this.keys[key] = false;
+        this._markInteraction();
         event.preventDefault();
       }
     };
@@ -379,6 +436,14 @@ export class CompareMultiViewRenderer {
       this._resizeObserver = null;
     }
 
+    if (this.controls) {
+      if (this._onControlsStart) this.controls.removeEventListener('start', this._onControlsStart);
+      if (this._onControlsChange) this.controls.removeEventListener('change', this._onControlsChange);
+      if (this._onControlsEnd) this.controls.removeEventListener('end', this._onControlsEnd);
+      this._onControlsStart = null;
+      this._onControlsChange = null;
+      this._onControlsEnd = null;
+    }
     this.controls?.dispose?.();
     this.controls = null;
 
@@ -453,6 +518,35 @@ export class CompareMultiViewRenderer {
     observe(this.canvases.pcB?.parentElement);
   }
 
+  _markInteraction() {
+    this._lastInteractionTs = performance.now();
+  }
+
+  _isKeyboardInteracting() {
+    return this.keys.ArrowUp
+      || this.keys.ArrowDown
+      || this.keys.ArrowLeft
+      || this.keys.ArrowRight
+      || this.keys.KeyW
+      || this.keys.KeyA
+      || this.keys.KeyS
+      || this.keys.KeyD
+      || this.keys.KeyQ
+      || this.keys.KeyE;
+  }
+
+  _applyPixelRatio(nextDpr, runResize = true) {
+    const safeNext = clampPositive(nextDpr, 1);
+    if (this._currentPixelRatio !== null && Math.abs(this._currentPixelRatio - safeNext) < 1e-3) {
+      return;
+    }
+    this._currentPixelRatio = safeNext;
+    this.rendererOcc?.setPixelRatio(safeNext);
+    this.rendererPc[0]?.setPixelRatio(safeNext);
+    this.rendererPc[1]?.setPixelRatio(safeNext);
+    if (runResize) this.onResize();
+  }
+
   onResize() {
     const occ = sizeCanvasRenderer(this.rendererOcc, this.canvases.occ);
     const pc0 = sizeCanvasRenderer(this.rendererPc[0], this.canvases.pcA);
@@ -495,6 +589,13 @@ export class CompareMultiViewRenderer {
     if (occW !== s.occW || occH !== s.occH || pc0W !== s.pc0W || pc0H !== s.pc0H || pc1W !== s.pc1W || pc1H !== s.pc1H) {
       this.onResize();
     }
+
+    const now = performance.now();
+    const keyboardInteracting = this._isKeyboardInteracting();
+    if (keyboardInteracting) this._markInteraction();
+    const interactionRecentlyActive = (now - this._lastInteractionTs) <= this._interactionHoldMs;
+    const useActiveDpr = this._isPointerInteracting || keyboardInteracting || interactionRecentlyActive;
+    this._applyPixelRatio(useActiveDpr ? this._activePixelRatio : this._idlePixelRatio);
 
     const direction = new THREE.Vector3();
     const right = new THREE.Vector3();

@@ -49,7 +49,7 @@
       height: 100%;
       display: grid;
       /* Keep 3D canvases stable: top row has a floor, but avoid runaway heights. */
-      grid-template-rows: minmax(240px, clamp(280px, calc(var(--app-vh) * 0.46), 460px)) minmax(220px, 1fr);
+      grid-template-rows: minmax(240px, clamp(300px, calc(var(--app-vh) * 0.50), 520px)) minmax(220px, 1fr);
       min-width: 0;
       overflow: hidden;
     }
@@ -77,6 +77,10 @@
     }
     #main #top-pane .dataset-dock {
       background: #ffffff !important;
+    }
+    #main #top-pane .dataset-dock__thumb {
+      object-fit: contain !important;
+      background: #ffffff;
     }
 
     #controls-bar {
@@ -139,13 +143,13 @@
       display: flex;
       gap: 8px !important;
       overflow-x: auto;
-      overflow-y: hidden;
-      padding: 4px 0 !important;
+      overflow-y: visible;
+      padding: 4px 0 8px !important;
       background: transparent !important;
       align-items: flex-start;
       flex: 1 1 auto;
       min-height: 0;
-      max-height: 230px;
+      max-height: none !important;
       min-width: 0;
     }
     /* Match inverse-attention strip style: natural camera aspect, label below image. */
@@ -297,7 +301,7 @@
         --pane-count: 2;
       }
       #main {
-        grid-template-rows: minmax(190px, clamp(220px, calc(var(--app-vh) * 0.42), 340px)) minmax(180px, 1fr);
+        grid-template-rows: minmax(210px, clamp(250px, calc(var(--app-vh) * 0.48), 420px)) minmax(180px, 1fr);
       }
       #gl-canvas-third,
       #label-pc-b {

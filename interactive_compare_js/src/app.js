@@ -7,12 +7,12 @@
 import { loadCompareScene } from './sceneLoader.js?v=2026-02-13-layout-fix1';
 import { ImageStrip } from '../../shared/ImageStrip.js';
 import { loadPointCloudData } from './loaders/pointCloudLoader.js?v=2026-02-13-layout-fix1';
-import { CompareMultiViewRenderer } from './renderers/CompareMultiViewRenderer.js?v=2026-02-13-layout-fix1';
+import { CompareMultiViewRenderer } from './renderers/CompareMultiViewRenderer.js?v=2026-02-13-dpr-opt1';
 import { DatasetFrameDock } from '../../shared/DatasetFrameDock.js';
 import { orderCameraItemsForUi } from '../../shared/cameraOrder.js';
 
 class App {
-  static VERSION = '2026-01-23-compare-v2b-stabletop';
+  static VERSION = '2026-02-13-compare-v2c-dpr-adaptive';
   static NARROW_LAYOUT_MAX_WIDTH = 980;
 
   constructor() {
@@ -43,6 +43,7 @@ class App {
     this.pcOptions = [];
     this.pcCacheByUrl = new Map(); // url -> pointcloudData
     this.occRenderOptions = {};
+    this.renderPerfOptions = {};
     this._cleanupViewportSizing = null;
     this.requestedPaneCount = 2;
     this.activePaneCount = 2;
@@ -54,6 +55,7 @@ class App {
     this._installViewportSizing();
     const urlParams = new URLSearchParams(window.location.search);
     this.occRenderOptions = this._parseOccRenderOptions(urlParams);
+    this.renderPerfOptions = this._parseRenderPerfOptions(urlParams);
     const dockContainer = document.getElementById('context-dock');
     if (dockContainer) {
       this.dock = new DatasetFrameDock(dockContainer, { demoKey: 'compare' });
@@ -173,6 +175,11 @@ class App {
       url.searchParams.delete('vox_z_min');
       url.searchParams.delete('vox_z_max');
       url.searchParams.delete('vox_top_layers');
+      url.searchParams.delete('dpr');
+      url.searchParams.delete('dpr_idle');
+      url.searchParams.delete('dpr_active');
+      url.searchParams.delete('dpr_hold_ms');
+      url.searchParams.delete('dpr_max');
       window.location.href = url.toString();
     });
 
@@ -273,7 +280,8 @@ class App {
       canvases,
       this.scene.occupancy,
       [pcAData, pcBData],
-      this.occRenderOptions
+      this.occRenderOptions,
+      this.renderPerfOptions
     );
   }
 
@@ -301,6 +309,42 @@ class App {
     if (Number.isFinite(zFilterMin)) opts.zFilterMin = zFilterMin;
     if (Number.isFinite(zFilterMax)) opts.zFilterMax = zFilterMax;
     if (Number.isFinite(dropTopLayers)) opts.dropTopLayers = dropTopLayers;
+    return opts;
+  }
+
+  _parseRenderPerfOptions(urlParams) {
+    const readNum = (...keys) => {
+      for (const key of keys) {
+        const raw = urlParams.get(key);
+        if (raw === null || raw === '') continue;
+        const v = Number(raw);
+        if (Number.isFinite(v)) return v;
+      }
+      return undefined;
+    };
+
+    const fixedPixelRatio = readNum('dpr');
+    const idlePixelRatio = readNum('dpr_idle');
+    const activePixelRatio = readNum('dpr_active');
+    const interactionHoldMs = readNum('dpr_hold_ms');
+    const maxDevicePixelRatio = readNum('dpr_max');
+
+    const opts = {};
+    if (Number.isFinite(fixedPixelRatio) && fixedPixelRatio > 0) {
+      opts.fixedPixelRatio = fixedPixelRatio;
+    }
+    if (Number.isFinite(idlePixelRatio) && idlePixelRatio > 0) {
+      opts.idlePixelRatio = idlePixelRatio;
+    }
+    if (Number.isFinite(activePixelRatio) && activePixelRatio > 0) {
+      opts.activePixelRatio = activePixelRatio;
+    }
+    if (Number.isFinite(interactionHoldMs)) {
+      opts.interactionHoldMs = Math.max(0, Math.floor(interactionHoldMs));
+    }
+    if (Number.isFinite(maxDevicePixelRatio) && maxDevicePixelRatio > 0) {
+      opts.maxDevicePixelRatio = maxDevicePixelRatio;
+    }
     return opts;
   }
 

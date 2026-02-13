@@ -37,3 +37,20 @@ http://localhost:8001/?scene=data/scenes/frame_000121/scene.json
 - `Q/E`: yaw left/right
 - mouse: orbit
 
+## DPR Tuning (quality vs FPS)
+
+`DPR` is device pixel ratio: render resolution scale for each canvas.
+Higher DPR = sharper image + more GPU cost. Lower DPR = blurrier image + better FPS.
+
+The compare demo now uses adaptive DPR by default:
+- idle: up to `2.0`
+- while interacting (mouse/keys): `1.0`
+
+You can override from URL:
+
+- Fixed low DPR (strongest perf):  
+  `http://localhost:8001/?scene=data/scenes/frame_000121/scene.json&dpr=1`
+- Custom adaptive DPR:  
+  `http://localhost:8001/?scene=data/scenes/frame_000121/scene.json&dpr_idle=1.5&dpr_active=0.9&dpr_hold_ms=220`
+- Cap device DPR used by the app:  
+  `http://localhost:8001/?scene=data/scenes/frame_000121/scene.json&dpr_max=1.25`
