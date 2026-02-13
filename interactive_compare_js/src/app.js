@@ -13,6 +13,7 @@ import { orderCameraItemsForUi } from '../../shared/cameraOrder.js';
 
 class App {
   static VERSION = '2026-01-23-compare-v2b-stabletop';
+  static NARROW_LAYOUT_MAX_WIDTH = 980;
 
   constructor() {
     this.loadingEl = document.getElementById('loading');
@@ -43,6 +44,10 @@ class App {
     this.pcCacheByUrl = new Map(); // url -> pointcloudData
     this.occRenderOptions = {};
     this._cleanupViewportSizing = null;
+    this.requestedPaneCount = 2;
+    this.activePaneCount = 2;
+    this._cleanupResponsivePaneHandling = null;
+    this._paneRebuildToken = 0;
   }
 
   async init() {
@@ -91,19 +96,23 @@ class App {
       // Let the browser do layout before we measure/init WebGL.
       await new Promise((r) => requestAnimationFrame(r));
 
-      // Top strip (no selection, no-op clicks)
+      // Top strip (inverse-attention style visual selection; no behavioral coupling)
       const stripItems = this.scene.images.map((img) => ({
         key: img.url,
         src: img.url,
         label: img.name || img.url
       }));
       this.strip = new ImageStrip(this.thumbStripEl, stripItems, {
-        enableSelection: false,
+        enableSelection: true,
+        onSelect: () => {},
         alwaysPannable: true,
         // Reduce duplicate DOM/images; still infinite, just fewer segments.
         maxSegments: 3,
         itemClass: 'thumb'
       });
+      if (stripItems.length > 0) {
+        this.strip.setSelected(stripItems[0].key);
+      }
 
       // Let images/strip populate before WebGL init (prevents 0x0 canvas on some browsers).
       await new Promise((r) => requestAnimationFrame(r));
@@ -118,28 +127,22 @@ class App {
 
       // Initial state from URL params (backed by defaults)
       const panesRaw = Number(urlParams.get('panes') || this.paneModeEl?.value || 2);
-      const panes = panesRaw === 3 ? 3 : 2;
-      if (this.paneModeEl) this.paneModeEl.value = String(panes);
+      this.requestedPaneCount = panesRaw === 3 ? 3 : 2;
+      this.activePaneCount = this._resolveResponsivePaneCount(this.requestedPaneCount);
+      if (this.paneModeEl) this.paneModeEl.value = String(this.requestedPaneCount);
 
       const defaultA = this._pickDefaultKey(urlParams.get('pcA'), 0);
       const defaultB = this._pickDefaultKey(urlParams.get('pcB'), 1);
       if (this.pcSelectAEl) this.pcSelectAEl.value = defaultA;
       if (this.pcSelectBEl) this.pcSelectBEl.value = defaultB;
 
-      // Apply pane mode (show/hide pcB)
-      this._applyPaneMode(panes);
-
-      // Load initial point clouds
-      const pcAKey = this.pcSelectAEl?.value || defaultA;
-      const pcBKey = this.pcSelectBEl?.value || defaultB;
-      const pcAData = await this._loadPointCloudByKey(pcAKey);
-      const pcBData = panes === 3 ? await this._loadPointCloudByKey(pcBKey) : null;
-
-      // Renderer
-      this._createRenderer(panes, pcAData, pcBData);
+      // Apply pane mode + renderer (3-pane only on sufficiently wide layouts)
+      this._applyPaneMode(this.activePaneCount);
+      await this._rebuildRendererForActivePaneCount();
 
       // Hook UI events
       this._installUiHandlers();
+      this._installResponsivePaneHandling();
     } catch (err) {
       console.error(err);
       this.showError(err?.message || String(err));
@@ -174,23 +177,11 @@ class App {
     });
 
     this.paneModeEl?.addEventListener('change', async () => {
-      const panes = Number(this.paneModeEl.value) === 3 ? 3 : 2;
-      updateUrl('panes', panes);
-
-      this._applyPaneMode(panes);
-
-      // Recreate renderer so we can cleanly add/remove the third canvas.
-      const pcAKey = this.pcSelectAEl?.value || this._pickDefaultKey(null, 0);
-      let pcBKey = this.pcSelectBEl?.value || this._pickDefaultKey(null, 1);
-      if (panes === 3 && !pcBKey) {
-        pcBKey = this._pickDefaultKey(null, 1);
-        if (this.pcSelectBEl) this.pcSelectBEl.value = pcBKey;
-      }
-
-      const pcAData = await this._loadPointCloudByKey(pcAKey);
-      const pcBData = panes === 3 ? await this._loadPointCloudByKey(pcBKey) : null;
-
-      this._createRenderer(panes, pcAData, pcBData);
+      this.requestedPaneCount = Number(this.paneModeEl.value) === 3 ? 3 : 2;
+      updateUrl('panes', this.requestedPaneCount);
+      this.activePaneCount = this._resolveResponsivePaneCount(this.requestedPaneCount);
+      this._applyPaneMode(this.activePaneCount);
+      await this._rebuildRendererForActivePaneCount();
     });
 
     this.pcSelectAEl?.addEventListener('change', async () => {
@@ -201,13 +192,72 @@ class App {
     });
 
     this.pcSelectBEl?.addEventListener('change', async () => {
-      const panes = Number(this.paneModeEl?.value) === 3 ? 3 : 2;
-      if (panes !== 3) return;
+      if (this.activePaneCount !== 3) return;
       const key = this.pcSelectBEl.value;
       updateUrl('pcB', key);
       const data = await this._loadPointCloudByKey(key);
       this.renderer?.setPointCloud?.(1, data);
     });
+  }
+
+  _resolveResponsivePaneCount(requestedPanes) {
+    const requested = requestedPanes === 3 ? 3 : 2;
+    const vvWidth = Number(window.visualViewport?.width || 0);
+    const width = vvWidth > 0 ? vvWidth : Number(window.innerWidth || 0);
+    if (width > 0 && width <= App.NARROW_LAYOUT_MAX_WIDTH) {
+      return 2;
+    }
+    return requested;
+  }
+
+  async _rebuildRendererForActivePaneCount() {
+    const rebuildToken = ++this._paneRebuildToken;
+    const panes = this.activePaneCount;
+    const pcAKey = this.pcSelectAEl?.value || this._pickDefaultKey(null, 0);
+    let pcBKey = this.pcSelectBEl?.value || this._pickDefaultKey(null, 1);
+    if (panes === 3 && !pcBKey) {
+      pcBKey = this._pickDefaultKey(null, 1);
+      if (this.pcSelectBEl) this.pcSelectBEl.value = pcBKey;
+    }
+
+    const pcAData = await this._loadPointCloudByKey(pcAKey);
+    const pcBData = panes === 3 ? await this._loadPointCloudByKey(pcBKey) : null;
+    if (rebuildToken !== this._paneRebuildToken) return;
+    this._createRenderer(panes, pcAData, pcBData);
+  }
+
+  _installResponsivePaneHandling() {
+    if (this._cleanupResponsivePaneHandling) return;
+
+    let raf = 0;
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const nextPanes = this._resolveResponsivePaneCount(this.requestedPaneCount);
+        if (nextPanes === this.activePaneCount) return;
+        this.activePaneCount = nextPanes;
+        this._applyPaneMode(this.activePaneCount);
+        this._rebuildRendererForActivePaneCount().catch((err) => {
+          console.error('Responsive pane update failed:', err);
+        });
+      });
+    };
+
+    const onWindowResize = () => schedule();
+    const onViewportResize = () => schedule();
+    const vv = window.visualViewport || null;
+    window.addEventListener('resize', onWindowResize, { passive: true });
+    vv?.addEventListener('resize', onViewportResize, { passive: true });
+    vv?.addEventListener('scroll', onViewportResize, { passive: true });
+
+    this._cleanupResponsivePaneHandling = () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onWindowResize);
+      vv?.removeEventListener('resize', onViewportResize);
+      vv?.removeEventListener('scroll', onViewportResize);
+      this._cleanupResponsivePaneHandling = null;
+    };
   }
 
   _createRenderer(panes, pcAData, pcBData) {

@@ -70,6 +70,14 @@
       min-height: 0;
       min-width: 0;
     }
+    /* Keep top area truly white even though shared iframe CSS forces #main dark. */
+    #main #top-pane {
+      background: #ffffff !important;
+      border-bottom: 1px solid #e5e7eb !important;
+    }
+    #main #top-pane .dataset-dock {
+      background: #ffffff !important;
+    }
 
     #controls-bar {
       display: flex;
@@ -127,51 +135,65 @@
     /* Hide legacy top controls (use URL params / defaults instead). */
     #controls-bar { display: none; }
 
-    #thumb-strip {
+    #main #thumb-strip {
       display: flex;
-      gap: 10px;
+      gap: 8px !important;
       overflow-x: auto;
-      padding: 6px 0;
-      background: rgba(0,0,0,0.25);
-      align-items: center;
+      overflow-y: hidden;
+      padding: 4px 0 !important;
+      background: transparent !important;
+      align-items: flex-start;
       flex: 1 1 auto;
-      min-height: 170px;
+      min-height: 0;
+      max-height: 230px;
       min-width: 0;
     }
-    .thumb {
+    /* Match inverse-attention strip style: natural camera aspect, label below image. */
+    #thumb-strip .thumb {
       flex: 0 0 auto;
-      width: 260px;
-      height: 160px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-      overflow: hidden;
+      width: auto !important;
+      height: auto !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      overflow: visible !important;
       cursor: grab;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0 !important;
+      box-shadow: none !important;
     }
-    .thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    #thumb-strip .thumb img {
+      width: auto !important;
+      height: 160px !important;
+      max-width: none !important;
+      object-fit: contain !important;
       display: block;
+      border-radius: 0 !important;
+      background: transparent !important;
     }
-    .thumb .image-strip-label {
-      position: absolute;
-      left: 8px;
-      bottom: 8px;
-      right: 8px;
-      padding: 4px 6px;
-      border-radius: 8px;
-      background: rgba(0,0,0,0.55);
-      font-size: 0.75rem;
-      color: #e6e6e6;
+    #thumb-strip .thumb .image-strip-label {
+      position: static !important;
+      inset: auto !important;
+      padding: 0 4px !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      border: 0 !important;
+      font-size: 0.8rem;
+      color: var(--text-secondary, #e6e6e6) !important;
+      text-align: center;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      max-width: 100%;
     }
-    .thumb.selected {
-      border-color: rgba(74, 158, 255, 0.9);
-      box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.25) inset;
+    #thumb-strip .thumb.selected {
+      border-color: transparent !important;
+      box-shadow: none !important;
+      outline: 2px solid var(--accent, rgba(74, 158, 255, 0.95)) !important;
+      outline-offset: 0;
     }
 
     /* Bottom pane: two canvases (more robust than scissor split) */
@@ -271,11 +293,24 @@
     code { color: #9fd0ff; }
 
     @media (max-width: 980px) {
+      :root {
+        --pane-count: 2;
+      }
       #main {
         grid-template-rows: minmax(190px, clamp(220px, calc(var(--app-vh) * 0.42), 340px)) minmax(180px, 1fr);
       }
-      #thumb-strip {
-        min-height: 136px;
+      #gl-canvas-third,
+      #label-pc-b {
+        display: none !important;
+      }
+      #thumb-strip .thumb img {
+        height: 136px !important;
+      }
+    }
+
+    @media (max-width: 680px) {
+      #thumb-strip .thumb img {
+        height: 112px !important;
       }
     }
 
@@ -308,7 +343,7 @@
         </div>
         <div class="hintline">WASD / Q,E, mouse orbit</div>
       </div>
-      <div id="thumb-strip" aria-label="Camera images"></div>
+      <div id="thumb-strip" class="camera-strip camera-strip--inverse" aria-label="Camera images"></div>
     </section>
 
     <section id="bottom-pane">
@@ -340,7 +375,7 @@
   </script>
 
   <!-- Cache-bust -->
-  <script type="module" src="src/app.js?v=2026-02-13-layout-fix1"></script>
+  <script type="module" src="src/app.js?v=2026-02-13-mobile-pane-strip-v1"></script>
   <script type="module" src="../shared/iframe_autoheight.js?v=2026-02-13-layout-fix1"></script>
 </body>
 </html>
