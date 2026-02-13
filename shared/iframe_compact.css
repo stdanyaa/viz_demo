@@ -240,6 +240,20 @@ body {
   height: 210px !important;
 }
 
+@media (max-width: 980px) {
+  .thumb {
+    width: 280px !important;
+    height: 172px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .thumb {
+    width: 220px !important;
+    height: 136px !important;
+  }
+}
+
 .thumb.selected {
   border-color: transparent !important;
   box-shadow: none !important;

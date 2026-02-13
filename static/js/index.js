@@ -3,6 +3,15 @@ window.HELP_IMPROVE_VIDEOJS = false;
 // Auto-size embedded demo iframes to their content height.
 // Each iframe posts { type: "vigt:iframeHeight", height } from shared/iframe_autoheight.js
 (function setupIframeAutoHeight() {
+    const clampIframeHeight = (rawHeight, wrap) => {
+        const isTall = !!wrap?.classList?.contains('demo-embed--tall');
+        const minHeight = isTall ? 380 : 320;
+        const scale = isTall ? 1.75 : 1.35;
+        const viewportCap = Math.max(minHeight, Math.floor((window.innerHeight || 0) * scale));
+        const h = Math.round(rawHeight);
+        return Math.max(minHeight, Math.min(h, viewportCap));
+    };
+
     window.addEventListener('message', function(ev) {
         const data = ev?.data;
         if (!data || data.type !== 'vigt:iframeHeight') return;
@@ -12,9 +21,10 @@ window.HELP_IMPROVE_VIDEOJS = false;
         const iframes = document.querySelectorAll('.demo-embed iframe');
         for (const iframe of iframes) {
             if (iframe.contentWindow === ev.source) {
-                iframe.style.height = `${h}px`;
                 const wrap = iframe.closest('.demo-embed');
-                if (wrap) wrap.style.height = `${h}px`;
+                const clamped = clampIframeHeight(h, wrap);
+                iframe.style.height = `${clamped}px`;
+                if (wrap) wrap.style.height = `${clamped}px`;
                 break;
             }
         }

@@ -12,13 +12,27 @@ function measureHeight() {
   return Math.max(h1, h2, h3, h4, 0);
 }
 
+function clampHeight(h) {
+  const raw = Number(h);
+  if (!Number.isFinite(raw) || raw <= 0) return 0;
+
+  const viewport = Math.max(
+    Number(window.visualViewport?.height || 0),
+    Number(window.innerHeight || 0)
+  );
+  if (!Number.isFinite(viewport) || viewport <= 0) return Math.round(raw);
+
+  const cap = Math.max(320, Math.floor(viewport * 1.25));
+  return Math.max(200, Math.min(Math.round(raw), cap));
+}
+
 let lastSent = 0;
 let rafId = null;
 function sendHeightSoon() {
   if (rafId != null) return;
   rafId = requestAnimationFrame(() => {
     rafId = null;
-    const h = measureHeight();
+    const h = clampHeight(measureHeight());
     if (!h || Math.abs(h - lastSent) < 2) return;
     lastSent = h;
     window.parent?.postMessage(
@@ -49,4 +63,3 @@ if (document.fonts && "addEventListener" in document.fonts) {
 
 // Kick once right away.
 sendHeightSoon();
-
