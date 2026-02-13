@@ -129,8 +129,6 @@ body {
   gap: 10px;
 }
 
-/* (Deprecated breakpoint; replaced by 860px below) */
-
 .panel {
   min-height: 0;
   border: 1px solid var(--panelBorder);
@@ -141,22 +139,6 @@ body {
   /* Let the image stage define height instead of stretching. */
   grid-template-rows: auto auto;
   gap: 8px;
-}
-
-/*
-  The project page embed can end up around ~900px wide depending on browser + margins,
-  which previously triggered the single-column breakpoint and made the square stages
-  look huge. We keep two columns until a smaller width, and when stacked we also cap
-  the panel width so the images stay reasonable.
-*/
-@media (max-width: 860px) {
-  .panels {
-    grid-template-columns: 1fr;
-  }
-
-  .panel {
-    width: 100%;
-  }
 }
 
 .panel__title {
