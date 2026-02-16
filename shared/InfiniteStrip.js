@@ -68,6 +68,8 @@ export class InfiniteStrip {
     this._onPointerDown = null;
     this._onPointerMove = null;
     this._onPointerUp = null;
+    this._onPointerCancel = null;
+    this._onLostPointerCapture = null;
     this._onWheel = null;
 
     this._lastResizeClientWidth = null;
@@ -255,6 +257,35 @@ export class InfiniteStrip {
     window.addEventListener('resize', this._onResize);
 
     // Pointer-drag panning
+    const finishPointerGesture = (ev, { allowClickSuppression } = { allowClickSuppression: false }) => {
+      if (!this._isPointerDown) return;
+      if (this._activePointerId !== null && ev?.pointerId !== this._activePointerId) return;
+      const wasPanning = this._isPanning;
+      const pointerId = ev?.pointerId ?? this._activePointerId;
+      this._isPointerDown = false;
+      this._isPanning = false;
+
+      if (wasPanning && pointerId !== null && pointerId !== undefined) {
+        try {
+          if (!this.container.hasPointerCapture || this.container.hasPointerCapture(pointerId)) {
+            this.container.releasePointerCapture?.(pointerId);
+          }
+        } catch (_) {
+          // Capture may already be gone (for example on pointer cancel).
+        }
+      }
+
+      this._activePointerId = null;
+
+      if (wasPanning && allowClickSuppression) {
+        // Click often fires after drag end; suppress once.
+        this._suppressClick = true;
+        setTimeout(() => { this._suppressClick = false; }, 0);
+      } else {
+        this._suppressClick = false;
+      }
+    };
+
     this._onPointerDown = (ev) => {
       if (!this.options.alwaysPannable) return;
       // Ignore right/middle click drags.
@@ -279,23 +310,16 @@ export class InfiniteStrip {
       this._wrapIfNeeded();
     };
     this._onPointerUp = (ev) => {
-      if (!this._isPointerDown) return;
-      if (this._activePointerId !== null && ev.pointerId !== this._activePointerId) return;
-      const wasPanning = this._isPanning;
-      this._isPointerDown = false;
-      this._isPanning = false;
-      if (wasPanning) {
-        this.container.releasePointerCapture?.(ev.pointerId);
-        // Click often fires after drag end; suppress once.
-        this._suppressClick = true;
-        setTimeout(() => { this._suppressClick = false; }, 0);
-      }
-      this._activePointerId = null;
+      finishPointerGesture(ev, { allowClickSuppression: true });
     };
+    this._onPointerCancel = (ev) => finishPointerGesture(ev, { allowClickSuppression: false });
+    this._onLostPointerCapture = (ev) => finishPointerGesture(ev, { allowClickSuppression: false });
 
     this.container.addEventListener('pointerdown', this._onPointerDown);
     window.addEventListener('pointermove', this._onPointerMove, { passive: true });
     window.addEventListener('pointerup', this._onPointerUp, { passive: true });
+    window.addEventListener('pointercancel', this._onPointerCancel, { passive: true });
+    this.container.addEventListener('lostpointercapture', this._onLostPointerCapture);
 
     // Wheel -> horizontal pan (optional)
     this._onWheel = (ev) => {
@@ -317,12 +341,16 @@ export class InfiniteStrip {
     if (this._onPointerDown) this.container.removeEventListener('pointerdown', this._onPointerDown);
     if (this._onPointerMove) window.removeEventListener('pointermove', this._onPointerMove);
     if (this._onPointerUp) window.removeEventListener('pointerup', this._onPointerUp);
+    if (this._onPointerCancel) window.removeEventListener('pointercancel', this._onPointerCancel);
+    if (this._onLostPointerCapture) this.container.removeEventListener('lostpointercapture', this._onLostPointerCapture);
     if (this._onWheel) this.container.removeEventListener('wheel', this._onWheel);
     this._onScroll = null;
     this._onResize = null;
     this._onPointerDown = null;
     this._onPointerMove = null;
     this._onPointerUp = null;
+    this._onPointerCancel = null;
+    this._onLostPointerCapture = null;
     this._onWheel = null;
   }
 }
