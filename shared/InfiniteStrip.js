@@ -54,12 +54,18 @@ export class InfiniteStrip {
     this.selectedKey = null;
 
     this._mainEls = new Map(); // key -> HTMLElement (cycle 0 container)
+    this._itemsByKey = new Map(); // key -> original item object
     this._allEls = []; // all item containers across cycles
 
     this._isPanning = false;
     this._isPointerDown = false;
     this._panStartX = 0;
     this._panStartScrollLeft = 0;
+    this._pointerDownItem = null;
+    this._pointerDownClientX = 0;
+    this._pointerDownClientY = 0;
+    this._pointerDownScrollLeft = 0;
+    this._pointerMoved = false;
     this._activePointerId = null;
     this._suppressClick = false;
 
@@ -96,6 +102,7 @@ export class InfiniteStrip {
     this._removeInteraction();
     this.container.innerHTML = '';
     this._mainEls.clear();
+    this._itemsByKey.clear();
     this._allEls = [];
   }
 
@@ -126,6 +133,7 @@ export class InfiniteStrip {
     this._renderedHalf = half;
     this.segmentWidth = null;
     this._mainEls.clear();
+    this._itemsByKey.clear();
     this._allEls = [];
     this.container.innerHTML = '';
 
@@ -133,7 +141,7 @@ export class InfiniteStrip {
     // 1) Build cycle 0 elements (so clones can reference them).
     // 2) Append segments in visual order [-half..0..half] so segmentWidth measurement is correct.
     for (const item of this.items) {
-      const key = this.options.key(item);
+      const key = String(this.options.key(item));
       const el = this.options.createItemContainer(item, 0);
       el.classList.add(this.options.itemClass);
       el.dataset.stripKey = key;
@@ -141,11 +149,12 @@ export class InfiniteStrip {
       if (this.options.onItemClick) el.addEventListener("click", () => this._handleItemClick(item));
       this.options.renderMainItem(el, item);
       this._mainEls.set(key, el);
+      this._itemsByKey.set(key, item);
     }
 
     for (let cycle = -half; cycle <= half; cycle++) {
       for (const item of this.items) {
-        const key = this.options.key(item);
+        const key = String(this.options.key(item));
 
         let el;
         if (cycle === 0) {
@@ -233,9 +242,17 @@ export class InfiniteStrip {
     }
   }
 
-  _handleItemClick(item) {
-    if (this._suppressClick) return;
+  _handleItemClick(item, { bypassSuppress = false } = {}) {
+    if (!bypassSuppress && this._suppressClick) return;
     if (this.options.onItemClick) this.options.onItemClick(item);
+  }
+
+  _resolveItemFromTarget(target) {
+    if (!target || typeof target.closest !== 'function') return null;
+    const itemEl = target.closest(`.${this.options.itemClass}`);
+    if (!itemEl || !this.container.contains(itemEl)) return null;
+    const key = itemEl.dataset?.stripKey || '';
+    return key ? (this._itemsByKey.get(key) || null) : null;
   }
 
   _installInteraction() {
@@ -257,11 +274,19 @@ export class InfiniteStrip {
     window.addEventListener('resize', this._onResize);
 
     // Pointer-drag panning
-    const finishPointerGesture = (ev, { allowClickSuppression } = { allowClickSuppression: false }) => {
+    const finishPointerGesture = (
+      ev,
+      {
+        allowClickSuppression = false,
+        allowTapSelection = false
+      } = {}
+    ) => {
       if (!this._isPointerDown) return;
       if (this._activePointerId !== null && ev?.pointerId !== this._activePointerId) return;
       const wasPanning = this._isPanning;
       const pointerId = ev?.pointerId ?? this._activePointerId;
+      const shouldSelectFromPointerUp =
+        allowTapSelection && !wasPanning && !this._pointerMoved && !!this._pointerDownItem;
       this._isPointerDown = false;
       this._isPanning = false;
 
@@ -276,8 +301,18 @@ export class InfiniteStrip {
       }
 
       this._activePointerId = null;
+      const tappedItem = this._pointerDownItem;
+      this._pointerDownItem = null;
+      this._pointerMoved = false;
+      this._pointerDownClientX = 0;
+      this._pointerDownClientY = 0;
+      this._pointerDownScrollLeft = 0;
 
-      if (wasPanning && allowClickSuppression) {
+      if (shouldSelectFromPointerUp && tappedItem) {
+        this._handleItemClick(tappedItem, { bypassSuppress: true });
+      }
+
+      if (shouldSelectFromPointerUp || (wasPanning && allowClickSuppression)) {
         // Click often fires after drag end; suppress once.
         this._suppressClick = true;
         setTimeout(() => { this._suppressClick = false; }, 0);
@@ -294,12 +329,27 @@ export class InfiniteStrip {
       this._isPanning = false;
       this._panStartX = ev.clientX;
       this._panStartScrollLeft = this.container.scrollLeft;
+      this._pointerDownItem = this._resolveItemFromTarget(ev.target);
+      this._pointerDownClientX = ev.clientX;
+      this._pointerDownClientY = ev.clientY;
+      this._pointerDownScrollLeft = this.container.scrollLeft;
+      this._pointerMoved = false;
       this._activePointerId = ev.pointerId ?? null;
     };
     this._onPointerMove = (ev) => {
       if (!this._isPointerDown) return;
       if (this._activePointerId !== null && ev.pointerId !== this._activePointerId) return;
       const dx = ev.clientX - this._panStartX;
+      const totalDx = ev.clientX - this._pointerDownClientX;
+      const totalDy = ev.clientY - this._pointerDownClientY;
+      const scrollDx = this.container.scrollLeft - this._pointerDownScrollLeft;
+      if (
+        Math.abs(totalDx) >= this.options.dragThreshold ||
+        Math.abs(totalDy) >= this.options.dragThreshold ||
+        Math.abs(scrollDx) >= this.options.dragThreshold
+      ) {
+        this._pointerMoved = true;
+      }
       if (!this._isPanning) {
         if (Math.abs(dx) < this.options.dragThreshold) return;
         this._isPanning = true;
@@ -310,10 +360,10 @@ export class InfiniteStrip {
       this._wrapIfNeeded();
     };
     this._onPointerUp = (ev) => {
-      finishPointerGesture(ev, { allowClickSuppression: true });
+      finishPointerGesture(ev, { allowClickSuppression: true, allowTapSelection: true });
     };
-    this._onPointerCancel = (ev) => finishPointerGesture(ev, { allowClickSuppression: false });
-    this._onLostPointerCapture = (ev) => finishPointerGesture(ev, { allowClickSuppression: false });
+    this._onPointerCancel = (ev) => finishPointerGesture(ev, { allowClickSuppression: false, allowTapSelection: false });
+    this._onLostPointerCapture = (ev) => finishPointerGesture(ev, { allowClickSuppression: false, allowTapSelection: false });
 
     this.container.addEventListener('pointerdown', this._onPointerDown);
     window.addEventListener('pointermove', this._onPointerMove, { passive: true });
@@ -344,6 +394,12 @@ export class InfiniteStrip {
     if (this._onPointerCancel) window.removeEventListener('pointercancel', this._onPointerCancel);
     if (this._onLostPointerCapture) this.container.removeEventListener('lostpointercapture', this._onLostPointerCapture);
     if (this._onWheel) this.container.removeEventListener('wheel', this._onWheel);
+    this._isPointerDown = false;
+    this._isPanning = false;
+    this._activePointerId = null;
+    this._pointerDownItem = null;
+    this._pointerMoved = false;
+    this._suppressClick = false;
     this._onScroll = null;
     this._onResize = null;
     this._onPointerDown = null;
