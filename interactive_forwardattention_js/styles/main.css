@@ -30,8 +30,15 @@ body {
 
 html,
 body {
-    overflow-y: hidden;
+    overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+html.is-embedded,
+html.is-embedded body,
+body.is-embedded {
+    overflow-y: hidden;
 }
 
 .hidden {

@@ -2,6 +2,24 @@
 // Posts the iframe document height to the parent so the parent page can resize the iframe.
 // Works same-origin and cross-origin (via postMessage); parent matches by contentWindow.
 
+function isEmbeddedFrame() {
+  try {
+    return window.self !== window.top;
+  } catch (_) {
+    return true;
+  }
+}
+
+function syncEmbeddedClass() {
+  const embedded = isEmbeddedFrame();
+  if (document.documentElement) {
+    document.documentElement.classList.toggle("is-embedded", embedded);
+  }
+  if (document.body) {
+    document.body.classList.toggle("is-embedded", embedded);
+  }
+}
+
 function measureHeight() {
   const de = document.documentElement;
   const b = document.body;
@@ -60,19 +78,23 @@ function startWarmupPings(durationMs = 8000, periodMs = 250) {
 
 // Initial + reactive updates
 window.addEventListener("load", () => {
+  syncEmbeddedClass();
   sendHeightSoon();
   startWarmupPings();
 });
 window.addEventListener("resize", sendHeightSoon);
 window.addEventListener("orientationchange", () => {
+  syncEmbeddedClass();
   sendHeightSoon();
   startWarmupPings(3000, 250);
 });
 window.addEventListener("pageshow", () => {
+  syncEmbeddedClass();
   sendHeightSoon();
   startWarmupPings(3000, 250);
 });
 document.addEventListener("DOMContentLoaded", () => {
+  syncEmbeddedClass();
   sendHeightSoon();
   startWarmupPings();
 });
@@ -92,4 +114,5 @@ if (document.fonts && "addEventListener" in document.fonts) {
 }
 
 // Kick once right away.
+syncEmbeddedClass();
 sendHeightSoon();
