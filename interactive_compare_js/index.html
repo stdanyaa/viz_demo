@@ -49,7 +49,7 @@
       height: 100%;
       display: grid;
       /* Keep 3D canvases stable: top row has a floor, but avoid runaway heights. */
-      grid-template-rows: minmax(240px, clamp(300px, calc(var(--app-vh) * 0.50), 520px)) minmax(220px, 1fr);
+      grid-template-rows: minmax(240px, clamp(280px, calc(var(--app-vh) * 0.46), 460px)) minmax(220px, 1fr);
       min-width: 0;
       overflow: hidden;
     }
@@ -75,14 +75,6 @@
       background: #ffffff !important;
       border-bottom: 1px solid #e5e7eb !important;
     }
-    #main #top-pane .dataset-dock {
-      background: #ffffff !important;
-    }
-    #main #top-pane .dataset-dock__thumb {
-      object-fit: contain !important;
-      background: #ffffff;
-    }
-
     #controls-bar {
       display: flex;
       align-items: center;
@@ -143,35 +135,33 @@
       display: flex;
       gap: 8px !important;
       overflow-x: auto;
-      overflow-y: visible;
-      padding: 4px 0 8px !important;
+      overflow-y: hidden;
+      padding: 4px 0 !important;
       background: transparent !important;
-      align-items: flex-start;
+      align-items: center;
       flex: 1 1 auto;
-      min-height: 0;
-      max-height: none !important;
+      min-height: 168px;
+      max-height: 230px;
       min-width: 0;
     }
-    /* Match inverse-attention strip style: natural camera aspect, label below image. */
+    /* Keep compare strip clean and compact, without affecting the scene dock strip. */
     #thumb-strip .thumb {
       flex: 0 0 auto;
       width: auto !important;
-      height: auto !important;
+      height: 160px !important;
       border: 0 !important;
       border-radius: 0 !important;
       background: transparent !important;
-      overflow: visible !important;
+      overflow: hidden !important;
       cursor: grab;
       position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      display: block;
       padding: 0 !important;
       box-shadow: none !important;
     }
     #thumb-strip .thumb img {
       width: auto !important;
-      height: 160px !important;
+      height: 100% !important;
       max-width: none !important;
       object-fit: contain !important;
       display: block;
@@ -179,19 +169,7 @@
       background: transparent !important;
     }
     #thumb-strip .thumb .image-strip-label {
-      position: static !important;
-      inset: auto !important;
-      padding: 0 4px !important;
-      border-radius: 0 !important;
-      background: transparent !important;
-      border: 0 !important;
-      font-size: 0.8rem;
-      color: var(--text-secondary, #e6e6e6) !important;
-      text-align: center;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 100%;
+      display: none !important;
     }
     #thumb-strip .thumb.selected {
       border-color: transparent !important;
@@ -301,7 +279,7 @@
         --pane-count: 2;
       }
       #main {
-        grid-template-rows: minmax(210px, clamp(250px, calc(var(--app-vh) * 0.48), 420px)) minmax(180px, 1fr);
+        grid-template-rows: minmax(190px, clamp(220px, calc(var(--app-vh) * 0.42), 340px)) minmax(180px, 1fr);
       }
       #gl-canvas-third,
       #label-pc-b {
